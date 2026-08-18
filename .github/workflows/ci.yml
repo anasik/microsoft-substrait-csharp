@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore Substrait.sln
+
+      - name: Verify formatting
+        run: dotnet format Substrait.sln --verify-no-changes --no-restore
+
+      - name: Build
+        run: dotnet build Substrait.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test Substrait.sln --configuration Release --no-build --logger trx
+
+      - name: Pack
+        run: dotnet pack src/Substrait/Substrait.csproj --configuration Release --no-build --output artifacts/packages
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: packages-${{ runner.os }}
+          path: artifacts/packages/*.*nupkg
+          if-no-files-found: error
