@@ -9,8 +9,9 @@ public sealed class RepositoryFoundationTests
     [TestMethod]
     public void LibraryUsesExpectedAssemblyName()
     {
-        Assembly assembly = Assembly.Load("Microsoft.Substrait");
+        string assemblyPath = Path.Combine(AppContext.BaseDirectory, "Microsoft.Substrait.dll");
+        AssemblyName assemblyName = AssemblyName.GetAssemblyName(assemblyPath);
 
-        Assert.AreEqual("Microsoft.Substrait", assembly.GetName().Name);
+        Assert.AreEqual("Microsoft.Substrait", assemblyName.Name);
     }
 }
