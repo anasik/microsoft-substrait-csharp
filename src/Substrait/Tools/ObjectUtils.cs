@@ -95,7 +95,7 @@ public static class ObjectUtils
         /// <inheritdoc/>
         public bool Equals((TKey, TValue) x, (TKey, TValue) y)
         {
-            return x.Item1.Equals(y.Item2);
+            return x.Item1.Equals(y.Item1);
         }
 
         /// <inheritdoc/>

@@ -39,7 +39,7 @@ public sealed class Plan : IPlan, IEquatable<Plan>
             return true;
         }
 
-        return other is not null && Enumerable.SequenceEqual(this.Roots, other.Roots);
+        return other is not null && Enumerable.SequenceEqual(this.Roots, other.Roots) && this.Version.Equals(other.Version);
     }
 
     /// <inheritdoc/>

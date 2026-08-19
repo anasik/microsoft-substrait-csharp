@@ -59,7 +59,7 @@ public abstract class ParameterizedTypeExpression : ParameterizedType
         /// <inheritdoc/>
         protected override bool NodeEqualTypeParameters(IType other)
         {
-            throw new NotImplementedException();
+            return other is VarChar o && this.Length.NodeEquals(o.Length, ITypeComparison.Strict);
         }
     }
 
@@ -116,7 +116,7 @@ public abstract class ParameterizedTypeExpression : ParameterizedType
         /// <inheritdoc/>
         protected override bool NodeEqualTypeParameters(IType other)
         {
-            throw new NotImplementedException();
+            return other is StringLiteral o && this.Value == o.Value;
         }
     }
 }

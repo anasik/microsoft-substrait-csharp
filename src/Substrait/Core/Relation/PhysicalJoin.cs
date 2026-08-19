@@ -97,7 +97,7 @@ public abstract class PhysicalJoin(IRel left, IRel right, AbstractJoin.JoinType 
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return base.GetHashCode();
+            return HashCode.Combine(this.Left, this.Right, this.Comparison);
         }
 
         /// <summary>

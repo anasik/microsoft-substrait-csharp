@@ -189,7 +189,6 @@ public abstract class FunctionImpl
     /// <returns>A tuple of minimum and maximum number of parameters.</returns>
     public Tuple<int, int> GetRange()
     {
-        long optionalCount = this.Args.Count(t => !t.Required);
         int max, min;
         if (this.Variadic != null)
         {

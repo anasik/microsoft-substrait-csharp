@@ -58,7 +58,7 @@ public static class TypeUtils
         var newNames = names.ToImmutableList();
         if (newNames.Count != namedStruct.Names.Count)
         {
-            throw new ArgumentException($"The remapped names must be identical to the length fields ({newNames.Count} vs {namedStruct.Names.Count}.");
+            throw new ArgumentException($"The remapped names must match the number of fields ({newNames.Count} vs {namedStruct.Names.Count}).");
         }
 
         return new NamedStruct(names.ToImmutableList(), namedStruct.Struct);

@@ -94,5 +94,5 @@ public sealed class VariadicBehavior : IVariadicBehavior
     }
 
     /// <inheritdoc/>
-    public IVariadicBehavior.ParameterConsistency BParameterConsistency => IVariadicBehavior.ParameterConsistency.Consistent;
+    public IVariadicBehavior.ParameterConsistency BParameterConsistency => this.parameterConsistency ?? IVariadicBehavior.ParameterConsistency.Consistent;
 }
