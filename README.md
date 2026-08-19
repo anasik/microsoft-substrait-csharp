@@ -25,6 +25,18 @@ Experimental C# bindings for [substrait](https://substrait.io).
 The repository requires a .NET 8 SDK. The checked-in `global.json` selects a
 compatible installed SDK.
 
+Clone the repository with its pinned Substrait specification sources:
+
+```shell
+git clone --recurse-submodules https://github.com/microsoft/substrait-csharp.git
+```
+
+For an existing clone, initialize the submodule with:
+
+```shell
+git submodule update --init --recursive
+```
+
 Restore, build, and test the solution from the repository root:
 
 ```shell
@@ -42,6 +54,10 @@ dotnet pack src/Substrait/Substrait.csproj --configuration Release --output arti
 The package and assembly identity are provisional until the first package
 preview. See [the development plan](docs/preview-package.md) for the staged contribution
 work and open decisions.
+
+The `third_party/substrait` submodule pins the upstream specification used to
+generate protobuf and type-parser code. To upgrade it, check out the desired
+upstream release in that directory and commit the updated submodule pointer.
 
 ## Contributing
 
