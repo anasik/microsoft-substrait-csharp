@@ -1,0 +1,83 @@
+// <copyright file="RelBottomUpDispatcher.cs" company="Microsoft">
+// Copyright (c) Microsoft. All rights reserved.
+// </copyright>
+
+using Substrait.Tools.Visitor;
+
+namespace Substrait.Core.Relation;
+
+/// <summary>
+/// Dispatcher for traversing relational operator trees following a bottom-up traversal strategy.
+/// </summary>
+/// <typeparam name="TContext">The type of the context used during traversal.</typeparam>
+/// <typeparam name="TOutput">The type of the output produced by the traversal.</typeparam>
+public class RelBottomUpDispatcher<TContext, TOutput> : IDispatcher<IRel, TContext, TOutput>
+    where TContext : IContext<IRel, TOutput>
+{
+    private readonly RelVisitor<TContext, TOutput> visitor;
+
+    private readonly ITraversalStrategy<IRel> traversalStrategy;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RelBottomUpDispatcher{TContext, TOutput}"/> class.
+    /// </summary>
+    /// <param name="visitor">The visitor used to process nodes during traversal.</param>
+    /// <param name="traversalStrategy">Traversal strategy to enumerate the nodes.</param>
+    public RelBottomUpDispatcher(RelVisitor<TContext, TOutput> visitor, ITraversalStrategy<IRel> traversalStrategy)
+    {
+        this.visitor = visitor;
+        this.traversalStrategy = traversalStrategy;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RelBottomUpDispatcher{TContext, TOutput}"/> class.
+    /// </summary>
+    /// <param name="visitor">The visitor used to process nodes during traversal.</param>
+    public RelBottomUpDispatcher(RelVisitor<TContext, TOutput> visitor)
+        : this(visitor, new BottomUpTraversal<IRel>())
+    {
+    }
+
+    /// <summary>
+    /// Traverses the relational operator tree starting from the given root node.
+    /// </summary>
+    /// <param name="root">The root node of the tree.</param>
+    /// <param name="context">The initial context for the traversal.</param>
+    /// <returns>The output produced by the traversal.</returns>
+    public TOutput Dispatch(IRel root, TContext context)
+    {
+        TOutput result = default!;
+
+        foreach (var node in this.traversalStrategy.Traverse(root))
+        {
+            result = node.Accept(this.visitor, context);
+
+            if (this.ShouldBailOut(result, context))
+            {
+                break;
+            }
+
+            context.AddOutput(node, result);
+            foreach (var dependency in node.InputNodes)
+            {
+                context.RemoveOutput(dependency);
+            }
+        }
+
+        context.RemoveOutput(root);
+
+        return result;
+    }
+
+    /// <summary>
+    /// Determines whether the traversal should bail out early.
+    /// </summary>
+    /// <param name="result">The result of the current visit.</param>
+    /// <param name="context">The current context.</param>
+    /// <returns>True if the traversal should bail out, false otherwise.</returns>
+    protected virtual bool ShouldBailOut(TOutput result, TContext context)
+    {
+        // Default implementation: do not bail out
+        return false;
+    }
+}

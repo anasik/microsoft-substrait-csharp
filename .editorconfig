@@ -15,6 +15,10 @@ dotnet_sort_system_directives_first = true
 csharp_new_line_before_open_brace = all
 csharp_style_namespace_declarations = file_scoped:warning
 
+[src/Substrait/obj/**/*.cs]
+dotnet_diagnostic.RS0016.severity = none
+dotnet_diagnostic.RS0041.severity = none
+
 [*.{json,md,yml,yaml}]
 indent_style = space
 indent_size = 2

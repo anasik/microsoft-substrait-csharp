@@ -1,0 +1,58 @@
+// <copyright file="SingleBucketExchange.cs" company="Microsoft">
+// Copyright (c) Microsoft. All rights reserved.
+// </copyright>
+
+using Substrait.Core.Expression;
+
+namespace Substrait.Core.Relation;
+
+/// <summary>
+/// An immutable implementation of the EXCHANGE relational operator for a single bucket exchange.
+/// </summary>
+public sealed class SingleBucketExchange : Exchange
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SingleBucketExchange"/> class.
+    /// </summary>
+    /// <param name="input">Input relation.</param>
+    /// <param name="partitionCount">Number of partitions targeted for output.</param>
+    /// <param name="expression">Expression that provides the bucket number.</param>
+    public SingleBucketExchange(IRel input, int partitionCount, IExpression expression)
+        : base(input, partitionCount)
+    {
+        this.Expression = expression;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SingleBucketExchange"/> class.
+    /// </summary>
+    /// <param name="input">Input relation.</param>
+    /// <param name="partitionCount">Number of partitions targeted for output.</param>
+    /// <param name="expression">Expression that provides the bucket number.</param>
+    /// <param name="transmute">Remap to apply on the output.</param>
+    public SingleBucketExchange(IRel input, int partitionCount, IExpression expression, Remap? transmute)
+        : base(input, partitionCount, transmute)
+    {
+        this.Expression = expression;
+    }
+
+    /// <summary>
+    /// Gets expression that provides the bucket number.
+    /// </summary>
+    public IExpression Expression { get; }
+
+    /// <inheritdoc/>
+    public override TOutput Accept<TContext, TOutput>(RelVisitor<TContext, TOutput> visitor, TContext context) => visitor.Visit(this, context);
+
+    /// <inheritdoc/>
+    public override int GetNodeHashCode()
+    {
+        return HashCode.Combine(nameof(SingleBucketExchange), this.PartitionCount, this.Expression);
+    }
+
+    /// <inheritdoc/>
+    public override bool NodeEquals(IRel other)
+    {
+        return other is SingleBucketExchange o && this.PartitionCount == o.PartitionCount && this.Expression.Equals(o.Expression);
+    }
+}
