@@ -10,6 +10,7 @@
     <PackageTags>Substrait;protobuf;query-plan</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1574;CA1305;CA1309;CA1310;CA1707;CA1708;CA1711;CA1712;CA1716;CA1720;CA1725;CA1805;CA1852;CA1859;RS0026;RS0027</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,6 +18,7 @@
     <PackageReference Include="Antlr4BuildTasks" PrivateAssets="All" />
     <PackageReference Include="Google.Protobuf" />
     <PackageReference Include="Grpc.Tools" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="All" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
   </ItemGroup>
 
