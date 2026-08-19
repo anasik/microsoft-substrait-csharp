@@ -192,12 +192,12 @@ public abstract class FunctionImpl
         int max, min;
         if (this.Variadic != null)
         {
-            max = this.Variadic.Max != null ? this.Args.Count - 1 + (int)this.Variadic.Max + 1 : int.MaxValue;
+            max = this.Variadic.Max != null ? this.Args.Count - 1 + (int)this.Variadic.Max : int.MaxValue;
             min = this.Args.Count - 1 + this.Variadic.Min;
         }
         else
         {
-            max = this.Args.Count + 1;
+            max = this.Args.Count;
             min = this.RequiredArguments.Count;
         }
 
