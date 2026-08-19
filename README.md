@@ -20,6 +20,29 @@ limitations under the License.
 
 Experimental C# bindings for [substrait](https://substrait.io).
 
+## Development
+
+The repository requires a .NET 8 SDK. The checked-in `global.json` selects a
+compatible installed SDK.
+
+Restore, build, and test the solution from the repository root:
+
+```shell
+dotnet restore Substrait.sln
+dotnet build Substrait.sln --configuration Release --no-restore
+dotnet test Substrait.sln --configuration Release --no-build
+```
+
+Create the NuGet package locally with:
+
+```shell
+dotnet pack src/Substrait/Substrait.csproj --configuration Release --output artifacts/packages
+```
+
+The package and assembly identity are provisional until the first package
+preview. See [the development plan](docs/preview-package.md) for the staged contribution
+work and open decisions.
+
 ## Contributing
 
 Here are some ways you can contribute to the substrait-csharp project:

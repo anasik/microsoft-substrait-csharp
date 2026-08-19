@@ -1,0 +1,13 @@
+# Normalize text in the repository and check it out with LF on every platform.
+* text=auto eol=lf
+
+# Windows command scripts require CRLF for broad compatibility.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Do not attempt line-ending conversion for binary assets.
+*.dll binary
+*.nupkg binary
+*.pdb binary
+*.png binary
+*.snupkg binary
