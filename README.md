@@ -51,6 +51,26 @@ Create the NuGet package locally with:
 dotnet pack src/Substrait/Substrait.csproj --configuration Release --output artifacts/packages
 ```
 
+## Preview package validation
+
+Continuous integration creates a run-scoped prerelease package, validates its
+NuGet metadata and Source Link mappings, restores it into a standalone consumer,
+and generates an SPDX 2.2 SBOM. The `.nupkg`, `.snupkg`, and SBOM are uploaded as
+workflow artifacts for review. The workflow does not publish to NuGet.org or any
+other package feed.
+
+The package consumer has no project reference to the library. To exercise it
+locally after packing a preview version, restore from the package output plus a
+public source and then run it:
+
+```shell
+dotnet restore tests/PackageSmokeTest/PackageSmokeTest.csproj -p:SmokeTestPackageVersion=0.1.0-preview.1 --source artifacts/packages --source https://api.nuget.org/v3/index.json --no-cache
+dotnet run --project tests/PackageSmokeTest/PackageSmokeTest.csproj --configuration Release --no-restore -p:SmokeTestPackageVersion=0.1.0-preview.1
+```
+
+When local network policy blocks public package downloads, the Windows and Linux
+CI jobs are the authoritative package restore and consumer validation.
+
 The package and assembly identity are provisional until the first package
 preview. See [the development plan](docs/preview-package.md) for the staged contribution
 work and open decisions.
