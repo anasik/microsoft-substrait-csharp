@@ -3,6 +3,7 @@ using Substrait.Core.Expression;
 using Substrait.Core.Extension;
 using Substrait.Core.Relation;
 using Substrait.Core.Relation.Converters;
+using Substrait.Core.Type;
 using Substrait.Protobuf;
 using ProtoExpression = Substrait.Protobuf.Expression;
 using ProtoRel = Substrait.Protobuf.Rel;
@@ -114,6 +115,31 @@ public sealed class ProtoToRelConverterTests
         Assert.AreEqual(Substrait.Core.Expression.Expression.SetComparisonSubquery.ComparisonOp.LessThan, comparison.Comparison);
         Assert.AreEqual(Substrait.Core.Expression.Expression.SetComparisonSubquery.ReductionOp.All, comparison.Reduction);
         Assert.IsInstanceOfType<NamedTableRead>(comparison.Subquery);
+    }
+
+    [DataTestMethod]
+    [DataRow(3L, 0L)]
+    [DataRow(-1L, 3L)]
+    [DataRow(100L, 8L)]
+    public void ConvertsFetch(long count, long offset)
+    {
+        ProtoRel relation = new()
+        {
+            Fetch = new FetchRel
+            {
+                Input = CreateNamedRead(),
+                CountExpr = new ProtoExpression { Literal = new ProtoExpression.Types.Literal { I64 = count } },
+                OffsetExpr = new ProtoExpression { Literal = new ProtoExpression.Types.Literal { I64 = offset } },
+                Common = new RelCommon(),
+            },
+        };
+
+        Fetch result = (Fetch)this.converter.ToRel(relation);
+
+        Assert.AreEqual(new Literal.I64Literal(count), result.Count);
+        Assert.AreEqual(new Literal.I64Literal(offset), result.Offset);
+        Assert.AreEqual(1, result.RecordType.Fields.Count);
+        Assert.AreEqual(TypeFactory.REQUIRED.I64, result.RecordType.Fields[0]);
     }
 
     [TestMethod]
