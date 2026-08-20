@@ -30,7 +30,7 @@ public class UniqueList<T>(IEqualityComparer<T> comparer) : IReadOnlyList<T>, IL
     T IList<T>.this[int index]
     {
         get => ((IList<T>)this.values)[index];
-        set => throw new InvalidOperationException("Does not support update.");
+        set => throw new NotSupportedException("Does not support update.");
     }
 
     /// <inheritdoc/>
@@ -46,10 +46,10 @@ public class UniqueList<T>(IEqualityComparer<T> comparer) : IReadOnlyList<T>, IL
     public int IndexOf(T item) => this.valueToIndex.TryGetValue(item, out int index) ? index : -1;
 
     /// <inheritdoc/>
-    public void Insert(int index, T item) => throw new InvalidOperationException("Use Add() instead.");
+    public void Insert(int index, T item) => throw new NotSupportedException("Use Add() instead.");
 
     /// <inheritdoc/>
-    public void RemoveAt(int index) => throw new InvalidOperationException("Does not support remove.");
+    public void RemoveAt(int index) => throw new NotSupportedException("Does not support remove.");
 
     /// <summary>
     /// Adds an item if it is not already present.
@@ -127,5 +127,5 @@ public class UniqueList<T>(IEqualityComparer<T> comparer) : IReadOnlyList<T>, IL
     public void CopyTo(T[] array, int arrayIndex) => ((ICollection<T>)this.values).CopyTo(array, arrayIndex);
 
     /// <inheritdoc/>
-    public bool Remove(T item) => throw new InvalidOperationException("Does not support remove.");
+    public bool Remove(T item) => throw new NotSupportedException("Does not support remove.");
 }

@@ -11,6 +11,7 @@ namespace Substrait.Tests.Tools;
 public sealed class SerializationSupportTests
 {
     private static readonly string[] ExpectedExtensionUris = ["functions.yaml", "types.yaml"];
+    private static readonly int[] ExpectedSingleRepeatedValue = [1];
     private static readonly int[] ExpectedRepeatedValues = [1, 2, 3];
 
     [TestMethod]
@@ -72,5 +73,25 @@ public sealed class SerializationSupportTests
 
         CollectionAssert.AreEqual(ExpectedRepeatedValues, values.ToArray());
         Assert.IsTrue(values.Capacity >= 3);
+    }
+
+    [TestMethod]
+    public void AllocateAndAddRangeRejectsNegativeCount()
+    {
+        RepeatedField<int> values = [1];
+
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => values.AllocateAndAddRange(-1, []));
+        CollectionAssert.AreEqual(ExpectedSingleRepeatedValue, values.ToArray());
+    }
+
+    [TestMethod]
+    public void UniqueListUnsupportedMutationsThrowNotSupportedException()
+    {
+        UniqueList<int> values = [1];
+
+        Assert.ThrowsException<NotSupportedException>(() => ((IList<int>)values)[0] = 2);
+        Assert.ThrowsException<NotSupportedException>(() => ((IList<int>)values).Insert(0, 2));
+        Assert.ThrowsException<NotSupportedException>(() => ((IList<int>)values).RemoveAt(0));
+        Assert.ThrowsException<NotSupportedException>(() => ((IList<int>)values).Remove(1));
     }
 }

@@ -16,7 +16,13 @@ public static class ProtoUtils
     /// <param name="values">The values to add.</param>
     public static void AllocateAndAddRange<T>(this RepeatedField<T> fields, int count, IEnumerable<T> values)
     {
-        fields.Capacity = fields.Count + count;
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
+        int requiredCapacity = checked(fields.Count + count);
+        if (requiredCapacity > fields.Capacity)
+        {
+            fields.Capacity = requiredCapacity;
+        }
+
         fields.AddRange(values);
     }
 }

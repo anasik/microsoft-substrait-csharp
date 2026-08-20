@@ -88,7 +88,7 @@ public sealed class ExtensionsCollection
         if (strictMode.IsOn(StrictMode.TYPE_VARIATION))
         {
             this.CheckNamespace(anchor.Namespace);
-            throw new ArgumentException($"Unexpected Types with key {anchor.Key}. The namespace {anchor.Namespace} is loaded but no Types with this key found.");
+            throw new ArgumentException($"Unexpected type variation with key {anchor.Key}. The namespace {anchor.Namespace} is loaded but no type variation with this key was found.");
         }
 
         return false;

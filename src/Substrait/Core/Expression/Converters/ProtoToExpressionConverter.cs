@@ -253,7 +253,7 @@ public class ProtoToExpressionConverter
         int fieldIndex = directReference.StructField.Field;
         return fieldReference.RootTypeCase switch
         {
-            ProtoFieldReference.RootTypeOneofCase.RootReference => new FieldReference(inputSchema.Fields[fieldIndex], fieldIndex),
+            ProtoFieldReference.RootTypeOneofCase.RootReference => CreateRootReference(inputSchema, fieldIndex),
             ProtoFieldReference.RootTypeOneofCase.OuterReference => CreateOuterReference(fieldReference, enclosingSchemas, fieldIndex),
             _ => throw new NotImplementedException(fieldReference.RootTypeCase.ToString()),
         };
@@ -269,10 +269,31 @@ public class ProtoToExpressionConverter
         return output[0];
     }
 
+    private static FieldReference CreateRootReference(ParameterizedType.Struct inputSchema, int fieldIndex)
+    {
+        if (fieldIndex < 0 || fieldIndex >= inputSchema.Fields.Count)
+        {
+            throw new SerializationException($"Deserialization error: field index {fieldIndex} is outside the input schema with {inputSchema.Fields.Count} fields.");
+        }
+
+        return new FieldReference(inputSchema.Fields[fieldIndex], fieldIndex);
+    }
+
     private static FieldReference CreateOuterReference(ProtoFieldReference fieldReference, IReadOnlyList<ParameterizedType.Struct> enclosingSchemas, int fieldIndex)
     {
-        int stepsOut = (int)fieldReference.OuterReference.StepsOut;
-        return new FieldReference(enclosingSchemas[^stepsOut].Fields[fieldIndex], fieldIndex, stepsOut);
+        uint stepsOut = fieldReference.OuterReference.StepsOut;
+        if (stepsOut == 0 || stepsOut > enclosingSchemas.Count)
+        {
+            throw new SerializationException($"Deserialization error: outer reference steps {stepsOut} is outside the {enclosingSchemas.Count} enclosing schemas.");
+        }
+
+        ParameterizedType.Struct schema = enclosingSchemas[^(int)stepsOut];
+        if (fieldIndex < 0 || fieldIndex >= schema.Fields.Count)
+        {
+            throw new SerializationException($"Deserialization error: field index {fieldIndex} is outside the referenced outer schema with {schema.Fields.Count} fields.");
+        }
+
+        return new FieldReference(schema.Fields[fieldIndex], fieldIndex, (int)stepsOut);
     }
 
     private IExpression CreateScalarFunction(ProtoExpression expression, IReadOnlyList<IExpression> valueArguments)

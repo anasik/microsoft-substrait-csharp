@@ -144,6 +144,21 @@ public sealed class ProtoToTypeConverterTests
     }
 
     [TestMethod]
+    public void StrictModeReportsUnknownTypeVariationClearly()
+    {
+        var knownVariation = new TypeVariationImpl("/types.yaml", "i64", "known", string.Empty, FunctionBehavior.INHERITS);
+        var extensions = new ExtensionsCollection([knownVariation], [], [], []);
+
+        ArgumentException exception = Assert.ThrowsException<ArgumentException>(() => extensions.TryGetTypeVariation(
+            new TypeVariationImplAnchor("/types.yaml", "unknown"),
+            ExtensionsDictionary.StrictMode.TYPE_VARIATION,
+            out _));
+
+        StringAssert.Contains(exception.Message, "Unexpected type variation with key unknown");
+        StringAssert.Contains(exception.Message, "no type variation with this key was found");
+    }
+
+    [TestMethod]
     public void ConvertsNestedInternalStructToProto()
     {
         IType type = TypeFactory.NULLABLE.Struct(
