@@ -225,6 +225,31 @@ public sealed class ProtoToRelConverterTests
         Assert.AreEqual(expectedNullability, result.RecordType.Fields[0].Nullable);
     }
 
+    [DataTestMethod]
+    [DataRow(false, 0)]
+    [DataRow(true, 1)]
+    public void ConvertsScalarAndEmptyVectorAggregates(bool includeEmptyGrouping, int expectedGroupingCount)
+    {
+        AggregateRel aggregate = new()
+        {
+            Input = CreateNamedRead(),
+            Measures = { CreateAggregateMeasure() },
+            Common = new RelCommon(),
+        };
+        if (includeEmptyGrouping)
+        {
+            aggregate.Groupings.Add(new AggregateRel.Types.Grouping());
+        }
+
+        Aggregate result = (Aggregate)CreateAggregateConverter().ToRel(new ProtoRel { Aggregate = aggregate });
+
+        Assert.AreEqual(expectedGroupingCount, result.Groupings.Count);
+        Assert.IsTrue(result.Groupings.All(grouping => grouping.Expressions.Count == 0));
+        Assert.AreEqual(0, result.GroupingExpressions.Count);
+        Assert.AreEqual(1, result.Measures.Count);
+        Assert.AreEqual(TypeFactory.REQUIRED.BOOL, result.RecordType.Fields[0]);
+    }
+
     [TestMethod]
     public void ConvertsAggregateJoinHashJoinAndExchange()
     {
@@ -391,6 +416,50 @@ public sealed class ProtoToRelConverterTests
             },
             RootReference = new ProtoExpression.Types.FieldReference.Types.RootReference(),
         };
+    }
+
+    private static AggregateRel.Types.Measure CreateAggregateMeasure()
+    {
+        return new AggregateRel.Types.Measure
+        {
+            Measure_ = new AggregateFunction
+            {
+                FunctionReference = 1,
+                OutputType = new ProtoType
+                {
+                    Bool = new ProtoType.Types.Boolean { Nullability = ProtoType.Types.Nullability.Required },
+                },
+                Phase = AggregationPhase.InitialToResult,
+                Invocation = AggregateFunction.Types.AggregationInvocation.All,
+            },
+        };
+    }
+
+    private static ProtoToRelConverter CreateAggregateConverter()
+    {
+        Substrait.Protobuf.Plan plan = new()
+        {
+            ExtensionUris =
+            {
+                new SimpleExtensionURI { ExtensionUriAnchor = 1, Uri = "/synthetic-aggregate.yaml" },
+            },
+            Extensions =
+            {
+                new SimpleExtensionDeclaration
+                {
+                    ExtensionFunction = new SimpleExtensionDeclaration.Types.ExtensionFunction
+                    {
+                        ExtensionUriReference = 1,
+                        FunctionAnchor = 1,
+                        Name = "synthetic_aggregate",
+                    },
+                },
+            },
+        };
+        return new ProtoToRelConverter(
+            new ExtensionsDictionary.Builder(plan).Build(),
+            new ExtensionsCollection(),
+            ExtensionsDictionary.StrictMode.OFF);
     }
 
     private static ProtoRel CreateNamedRead()
