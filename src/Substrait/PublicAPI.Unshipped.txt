@@ -1577,6 +1577,11 @@ Substrait.Core.Relation.Converters.ProtoToRelConverter.ProtoToRelConverter(Subst
 Substrait.Core.Relation.Converters.ProtoToRelConverter.ProtoToRelConverter(Substrait.Core.Extension.ExtensionsDictionary! lookup, Substrait.Core.Extension.ExtensionsDictionary.StrictMode strictMode = Substrait.Core.Extension.ExtensionsDictionary.StrictMode.STRICT) -> void
 Substrait.Core.Relation.Converters.ProtoToRelConverter.ToRel(Substrait.Protobuf.Rel! protoRel, System.Collections.Generic.IReadOnlyList<Substrait.Core.Type.ParameterizedType.Struct!>! enclosingSchemas) -> Substrait.Core.Relation.IRel!
 Substrait.Core.Relation.Converters.ProtoToRelConverter.ToRel(Substrait.Protobuf.Rel! protoRel) -> Substrait.Core.Relation.IRel!
+Substrait.Core.Plan.Converters.ProtoToPlanConverter
+Substrait.Core.Plan.Converters.ProtoToPlanConverter.From(Substrait.Protobuf.Plan! plan, Substrait.Core.Extension.ExtensionsDictionary.StrictMode strictMode = Substrait.Core.Extension.ExtensionsDictionary.StrictMode.STRICT) -> Substrait.Core.Plan.IPlan!
+Substrait.Core.Plan.Converters.ProtoToPlanConverter.GetProtoRelConverter(Substrait.Core.Extension.ExtensionsDictionary! lookup, Substrait.Core.Extension.ExtensionsDictionary.StrictMode strictMode) -> Substrait.Core.Relation.Converters.ProtoToRelConverter!
+Substrait.Core.Plan.Converters.ProtoToPlanConverter.ProtoToPlanConverter() -> void
+Substrait.Core.Plan.Converters.ProtoToPlanConverter.ProtoToPlanConverter(Substrait.Core.Extension.ExtensionsCollection! extensions) -> void
 virtual Substrait.Core.Type.PrimitiveType.TypeName.get -> string!
 virtual Substrait.Core.Type.TypeBottomUpDispatcher<TContext, TOutput>.ShouldBailOut(TOutput result, TContext context) -> bool
 virtual Substrait.Core.Type.TypeTopDownDispatcher<TContext, TOutput>.ShouldBailOut(TOutput result, TContext context) -> bool
