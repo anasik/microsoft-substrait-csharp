@@ -1601,6 +1601,10 @@ Substrait.Core.Type.Converters.TypeToProtoConverter
 Substrait.Core.Type.Converters.TypeToProtoConverter.From(Substrait.Core.Type.IType! type, Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext! context) -> Substrait.Protobuf.Type!
 Substrait.Core.Type.Converters.TypeToProtoConverter.From(Substrait.Core.Type.IType! type) -> Substrait.Protobuf.Type!
 Substrait.Core.Type.Converters.TypeToProtoConverter.TypeToProtoConverter() -> void
+Substrait.Core.Expression.Converters.ExpressionToProtoConverter
+Substrait.Core.Expression.Converters.ExpressionToProtoConverter.ExpressionToProtoConverter(Substrait.Core.Type.Converters.TypeToProtoConverter! typeConverter) -> void
+Substrait.Core.Expression.Converters.ExpressionToProtoConverter.From(Substrait.Core.Expression.IExpression! expression, Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext! context) -> Substrait.Protobuf.Expression!
+Substrait.Core.Expression.Converters.ExpressionToProtoConverter.From(Substrait.Core.Expression.IExpression! expression) -> Substrait.Protobuf.Expression!
 virtual Substrait.Core.Type.PrimitiveType.TypeName.get -> string!
 virtual Substrait.Core.Type.TypeBottomUpDispatcher<TContext, TOutput>.ShouldBailOut(TOutput result, TContext context) -> bool
 virtual Substrait.Core.Type.TypeTopDownDispatcher<TContext, TOutput>.ShouldBailOut(TOutput result, TContext context) -> bool
