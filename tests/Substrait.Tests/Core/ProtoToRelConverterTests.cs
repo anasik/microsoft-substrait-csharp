@@ -197,6 +197,34 @@ public sealed class ProtoToRelConverterTests
         Assert.AreEqual(TypeFactory.NULLABLE.I32, result.Rows[1].Fields[0].Type);
     }
 
+    [DataTestMethod]
+    [DataRow(SetRel.Types.SetOp.MinusPrimary, Set.SetOp.MinusPrimary, ProtoType.Types.Nullability.Nullable, ProtoType.Types.Nullability.Required, IType.NullableType.Nullable)]
+    [DataRow(SetRel.Types.SetOp.IntersectionMultiset, Set.SetOp.IntersectionMultiset, ProtoType.Types.Nullability.Nullable, ProtoType.Types.Nullability.Required, IType.NullableType.Required)]
+    [DataRow(SetRel.Types.SetOp.UnionAll, Set.SetOp.UnionAll, ProtoType.Types.Nullability.Required, ProtoType.Types.Nullability.Nullable, IType.NullableType.Nullable)]
+    public void ConvertsSetOperations(
+        SetRel.Types.SetOp protoOperation,
+        Set.SetOp expectedOperation,
+        ProtoType.Types.Nullability leftNullability,
+        ProtoType.Types.Nullability rightNullability,
+        IType.NullableType expectedNullability)
+    {
+        ProtoRel relation = new()
+        {
+            Set = new SetRel
+            {
+                Op = protoOperation,
+                Inputs = { CreateNamedRead(leftNullability), CreateNamedRead(rightNullability) },
+                Common = new RelCommon(),
+            },
+        };
+
+        Set result = (Set)this.converter.ToRel(relation);
+
+        Assert.AreEqual(expectedOperation, result.SetOperation);
+        Assert.AreEqual(2, result.Inputs.Count);
+        Assert.AreEqual(expectedNullability, result.RecordType.Fields[0].Nullable);
+    }
+
     [TestMethod]
     public void ConvertsAggregateJoinHashJoinAndExchange()
     {
@@ -367,6 +395,11 @@ public sealed class ProtoToRelConverterTests
 
     private static ProtoRel CreateNamedRead()
     {
+        return CreateNamedRead(ProtoType.Types.Nullability.Required);
+    }
+
+    private static ProtoRel CreateNamedRead(ProtoType.Types.Nullability nullability)
+    {
         return new ProtoRel
         {
             Read = new ReadRel
@@ -380,7 +413,7 @@ public sealed class ProtoToRelConverterTests
                         {
                             new ProtoType
                             {
-                                I64 = new ProtoType.Types.I64 { Nullability = ProtoType.Types.Nullability.Required },
+                                I64 = new ProtoType.Types.I64 { Nullability = nullability },
                             },
                         },
                         Nullability = ProtoType.Types.Nullability.Required,
