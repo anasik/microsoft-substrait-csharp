@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Runtime.Serialization;
 using Substrait.Core.Extension;
 using Substrait.Core.Extension.Functions;
+using Substrait.Core.Relation.Converters;
 using Substrait.Core.Type;
 using Substrait.Core.Type.Converters;
 using Substrait.Tools;
@@ -11,6 +12,7 @@ using ProtoExpression = Substrait.Protobuf.Expression;
 using ProtoFieldReference = Substrait.Protobuf.Expression.Types.FieldReference;
 using ProtoFunctionArgument = Substrait.Protobuf.FunctionArgument;
 using ProtoLiteral = Substrait.Protobuf.Expression.Types.Literal;
+using ProtoSubquery = Substrait.Protobuf.Expression.Types.Subquery;
 
 namespace Substrait.Core.Expression.Converters;
 
@@ -23,6 +25,7 @@ public class ProtoToExpressionConverter
     private readonly ExtensionsDictionary.StrictMode strictMode;
     private readonly ExtensionsCollection extensions;
     private readonly ProtoToTypeConverter protoTypeConverter;
+    private readonly ProtoToRelConverter? protoRelConverter;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ProtoToExpressionConverter"/> class.
@@ -36,11 +39,30 @@ public class ProtoToExpressionConverter
         ExtensionsCollection extensions,
         ProtoToTypeConverter protoTypeConverter,
         ExtensionsDictionary.StrictMode strictMode = ExtensionsDictionary.StrictMode.STRICT)
+        : this(lookup, extensions, protoTypeConverter, null, strictMode)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a converter that supports subqueries.
+    /// </summary>
+    /// <param name="lookup">The extension lookup.</param>
+    /// <param name="extensions">The available extensions.</param>
+    /// <param name="protoTypeConverter">The type converter.</param>
+    /// <param name="protoRelConverter">The relation converter.</param>
+    /// <param name="strictMode">The extension resolution mode.</param>
+    public ProtoToExpressionConverter(
+        ExtensionsDictionary lookup,
+        ExtensionsCollection extensions,
+        ProtoToTypeConverter protoTypeConverter,
+        ProtoToRelConverter? protoRelConverter,
+        ExtensionsDictionary.StrictMode strictMode = ExtensionsDictionary.StrictMode.STRICT)
     {
         this.lookup = lookup;
         this.strictMode = strictMode;
         this.extensions = extensions;
         this.protoTypeConverter = protoTypeConverter;
+        this.protoRelConverter = protoRelConverter;
     }
 
     /// <summary>
@@ -135,6 +157,9 @@ public class ProtoToExpressionConverter
                         }
                     }
 
+                    break;
+                case ProtoExpression.RexTypeOneofCase.Subquery:
+                    destination.Add(this.CreateSubquery(current.Subquery, inputSchema, enclosingSchemas));
                     break;
                 default:
                     throw new NotImplementedException(current.RexTypeCase.ToString());
@@ -286,5 +311,47 @@ public class ProtoToExpressionConverter
             arguments,
             this.protoTypeConverter.From(scalarFunction.OutputType),
             declaration);
+    }
+
+    private IExpression CreateSubquery(
+        ProtoSubquery subquery,
+        ParameterizedType.Struct inputSchema,
+        IReadOnlyList<ParameterizedType.Struct> enclosingSchemas)
+    {
+        if (this.protoRelConverter is null)
+        {
+            throw new InvalidOperationException("Subquery conversion requires a relation converter.");
+        }
+
+        IReadOnlyList<ParameterizedType.Struct> nestedSchemas = enclosingSchemas.Append(inputSchema).ToImmutableList();
+        return subquery.SubqueryTypeCase switch
+        {
+            ProtoSubquery.SubqueryTypeOneofCase.Scalar => this.CreateScalarSubquery(subquery, nestedSchemas),
+            ProtoSubquery.SubqueryTypeOneofCase.InPredicate => new Expression.InPredicateSubquery(
+                this.protoRelConverter.ToRel(subquery.InPredicate.Haystack, nestedSchemas),
+                subquery.InPredicate.Needles.Select(needle => this.From(needle, inputSchema, enclosingSchemas)).ToImmutableList()),
+            ProtoSubquery.SubqueryTypeOneofCase.SetPredicate => new Expression.SetPredicateSubquery(
+                this.protoRelConverter.ToRel(subquery.SetPredicate.Tuples, nestedSchemas),
+                subquery.SetPredicate.PredicateOp.FromProto()),
+            ProtoSubquery.SubqueryTypeOneofCase.SetComparison => new Expression.SetComparisonSubquery(
+                this.From(subquery.SetComparison.Left, inputSchema, enclosingSchemas),
+                subquery.SetComparison.ComparisonOp.FromProto(),
+                subquery.SetComparison.ReductionOp.FromProto(),
+                this.protoRelConverter.ToRel(subquery.SetComparison.Right, nestedSchemas)),
+            _ => throw new NotImplementedException(subquery.SubqueryTypeCase.ToString()),
+        };
+    }
+
+    private IExpression CreateScalarSubquery(
+        ProtoSubquery subquery,
+        IReadOnlyList<ParameterizedType.Struct> enclosingSchemas)
+    {
+        var relation = this.protoRelConverter!.ToRel(subquery.Scalar.Input, enclosingSchemas);
+        if (relation.RecordType.Fields.Count != 1)
+        {
+            throw new InvalidOperationException($"Subquery must yield exactly 1 column but {relation.RecordType.Fields.Count} columns.");
+        }
+
+        return new Expression.ScalarSubquery(relation, relation.RecordType.Fields[0]);
     }
 }
