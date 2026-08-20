@@ -309,6 +309,65 @@ public sealed class ProtoToRelConverterTests
         Assert.ThrowsException<ArgumentException>(() => this.converter.ToRel(relation));
     }
 
+    [DataTestMethod]
+    [DataRow(HashJoinRel.Types.JoinType.Inner, AbstractJoin.JoinType.Inner)]
+    [DataRow(HashJoinRel.Types.JoinType.Outer, AbstractJoin.JoinType.Outer)]
+    [DataRow(HashJoinRel.Types.JoinType.Left, AbstractJoin.JoinType.Left)]
+    [DataRow(HashJoinRel.Types.JoinType.Right, AbstractJoin.JoinType.Right)]
+    [DataRow(HashJoinRel.Types.JoinType.LeftSemi, AbstractJoin.JoinType.LeftSemi)]
+    [DataRow(HashJoinRel.Types.JoinType.RightSemi, AbstractJoin.JoinType.RightSemi)]
+    [DataRow(HashJoinRel.Types.JoinType.LeftAnti, AbstractJoin.JoinType.LeftAnti)]
+    [DataRow(HashJoinRel.Types.JoinType.RightAnti, AbstractJoin.JoinType.RightAnti)]
+    [DataRow(HashJoinRel.Types.JoinType.LeftSingle, AbstractJoin.JoinType.LeftSingle)]
+    [DataRow(HashJoinRel.Types.JoinType.RightSingle, AbstractJoin.JoinType.RightSingle)]
+    [DataRow(HashJoinRel.Types.JoinType.LeftMark, AbstractJoin.JoinType.LeftMark)]
+    [DataRow(HashJoinRel.Types.JoinType.RightMark, AbstractJoin.JoinType.RightMark)]
+    public void ConvertsHashJoinTypes(HashJoinRel.Types.JoinType protoType, AbstractJoin.JoinType expectedType)
+    {
+        HashJoin result = (HashJoin)this.converter.ToRel(CreateHashJoin(protoType));
+
+        Assert.AreEqual(expectedType, result.Type);
+    }
+
+    [TestMethod]
+    public void RejectsUnspecifiedHashJoinType()
+    {
+        Assert.ThrowsException<ArgumentException>(() => this.converter.ToRel(CreateHashJoin(HashJoinRel.Types.JoinType.Unspecified)));
+    }
+
+    [DataTestMethod]
+    [DataRow(HashJoinRel.Types.BuildInput.Unspecified, false)]
+    [DataRow(HashJoinRel.Types.BuildInput.Left, true)]
+    [DataRow(HashJoinRel.Types.BuildInput.Right, false)]
+    public void ConvertsHashJoinBuildInput(HashJoinRel.Types.BuildInput buildInput, bool expectedBuildLeft)
+    {
+        HashJoin result = (HashJoin)this.converter.ToRel(CreateHashJoin(buildInput: buildInput));
+
+        Assert.AreEqual(expectedBuildLeft, result.BuildLeft);
+        Assert.AreSame(expectedBuildLeft ? result.Left : result.Right, result.Build);
+        Assert.AreSame(expectedBuildLeft ? result.Right : result.Left, result.Probe);
+    }
+
+    [DataTestMethod]
+    [DataRow(ComparisonJoinKey.Types.SimpleComparisonType.Eq, PhysicalJoin.ComparisonJoinKey.SimpleComparisonType.Eq)]
+    [DataRow(ComparisonJoinKey.Types.SimpleComparisonType.IsNotDistinctFrom, PhysicalJoin.ComparisonJoinKey.SimpleComparisonType.IsNotDistinctFrom)]
+    [DataRow(ComparisonJoinKey.Types.SimpleComparisonType.MightEqual, PhysicalJoin.ComparisonJoinKey.SimpleComparisonType.MightEqual)]
+    public void ConvertsHashJoinSimpleComparisons(
+        ComparisonJoinKey.Types.SimpleComparisonType protoComparison,
+        PhysicalJoin.ComparisonJoinKey.SimpleComparisonType expectedComparison)
+    {
+        HashJoin result = (HashJoin)this.converter.ToRel(CreateHashJoin(comparison: protoComparison));
+
+        Assert.AreEqual(expectedComparison, result.Keys[0].Comparison.Simple);
+    }
+
+    [TestMethod]
+    public void RejectsUnspecifiedHashJoinSimpleComparison()
+    {
+        Assert.ThrowsException<ArgumentException>(() => this.converter.ToRel(
+            CreateHashJoin(comparison: ComparisonJoinKey.Types.SimpleComparisonType.Unspecified)));
+    }
+
     [TestMethod]
     public void ConvertsAggregateJoinHashJoinAndExchange()
     {
@@ -474,6 +533,33 @@ public sealed class ProtoToRelConverterTests
                 StructField = new ProtoExpression.Types.ReferenceSegment.Types.StructField { Field = field },
             },
             RootReference = new ProtoExpression.Types.FieldReference.Types.RootReference(),
+        };
+    }
+
+    private static ProtoRel CreateHashJoin(
+        HashJoinRel.Types.JoinType type = HashJoinRel.Types.JoinType.Inner,
+        HashJoinRel.Types.BuildInput buildInput = HashJoinRel.Types.BuildInput.Right,
+        ComparisonJoinKey.Types.SimpleComparisonType comparison = ComparisonJoinKey.Types.SimpleComparisonType.Eq)
+    {
+        return new ProtoRel
+        {
+            HashJoin = new HashJoinRel
+            {
+                Left = CreateNamedRead(),
+                Right = CreateNamedRead(),
+                Type = type,
+                BuildInput = buildInput,
+                Keys =
+                {
+                    new ComparisonJoinKey
+                    {
+                        Left = CreateFieldReference(0),
+                        Right = CreateFieldReference(1),
+                        Comparison = new ComparisonJoinKey.Types.ComparisonType { Simple = comparison },
+                    },
+                },
+                Common = new RelCommon(),
+            },
         };
     }
 
