@@ -208,7 +208,7 @@ public class ProtoToRelConverter
 
         foreach (AggregateRel.Types.Grouping grouping in aggregate.Groupings)
         {
-            var references = grouping.ExpressionReferences.Select(reference => (int)reference).ToHashSet();
+            var references = new HashSet<int>(grouping.ExpressionReferences.Select(reference => (int)reference));
             if (references.Any(reference => reference < 0 || reference >= aggregate.GroupingExpressions.Count))
             {
                 throw new SerializationException("Deserialization error: grouping expression reference index is out of bounds.");

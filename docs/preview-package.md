@@ -14,19 +14,21 @@ preview releases may contain breaking API changes.
 
 ## Compatibility scope
 
-- The package targets `net8.0` only.
+- The package targets `net8.0` and `netstandard2.0`.
 - Generated protobuf bindings and embedded extension definitions correspond to
   the Substrait v0.73.0 source pinned by the repository submodule.
-- Runtime package dependencies are limited to `Antlr4.Runtime.Standard`,
-  `Google.Protobuf`, and `YamlDotNet`.
+- Both targets depend on `Antlr4.Runtime.Standard`, `Google.Protobuf`, and
+  `YamlDotNet`. The `netstandard2.0` target also uses `IndexRange`,
+  `Microsoft.Bcl.HashCode`, and `System.Memory` compatibility packages.
 - query-language, product-specific, product-specific, product-specific, downstream/downstream integration, and shared downstream
   `TestData` assets remain outside the public package.
 
 Package validation covers metadata, dependencies, license expression, README,
-symbols, Source Link, an SPDX 2.2 SBOM, and a standalone package consumer on
-Windows and Linux. When organization policy blocks public package downloads on
-developer machines, the hosted CI jobs are the authoritative clean-restore
-result.
+symbols, Source Link, an SPDX 2.2 SBOM, and standalone package consumers on
+Windows and Linux. Windows also executes the `netstandard2.0` package asset from
+a .NET Framework 4.6.2 consumer. When organization policy blocks public package
+downloads on developer machines, the hosted CI jobs are the authoritative
+clean-restore result.
 
 ## Remaining gate
 

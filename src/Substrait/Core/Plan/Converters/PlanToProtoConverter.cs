@@ -61,7 +61,14 @@ public class PlanToProtoConverter
             ExtensionUriAnchor = (uint)index + 1,
         }));
 
-        var nextAnchor = Enum.GetValues<ExtensionsCollector.ExtensionType>().ToDictionary(type => type, _ => 0U);
+#if NET5_0_OR_GREATER
+        var nextAnchor = Enum.GetValues<ExtensionsCollector.ExtensionType>()
+            .ToDictionary(type => type, _ => 0U);
+#else
+        var nextAnchor = Enum.GetValues(typeof(ExtensionsCollector.ExtensionType))
+            .Cast<ExtensionsCollector.ExtensionType>()
+            .ToDictionary(type => type, _ => 0U);
+#endif
         result.Extensions.AddRange(collected.Extensions.Select(extension =>
         {
             uint anchor = nextAnchor[extension.Type]++;

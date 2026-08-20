@@ -88,6 +88,14 @@ jobs:
       - name: Run package smoke test
         run: dotnet run --project tests/PackageSmokeTest/PackageSmokeTest.csproj --configuration Release --no-restore -p:SmokeTestPackageVersion=${{ env.PREVIEW_PACKAGE_VERSION }}
 
+      - name: Restore .NET Framework package smoke test
+        if: runner.os == 'Windows'
+        run: dotnet restore tests/PackageSmokeTest/PackageSmokeTest.csproj -p:SmokeTestPackageVersion=${{ env.PREVIEW_PACKAGE_VERSION }} -p:SmokeTestTargetFramework=net462 --configfile tests/PackageSmokeTest/NuGet.Config --no-cache
+
+      - name: Run .NET Framework package smoke test
+        if: runner.os == 'Windows'
+        run: dotnet run --project tests/PackageSmokeTest/PackageSmokeTest.csproj --configuration Release --no-restore -p:SmokeTestPackageVersion=${{ env.PREVIEW_PACKAGE_VERSION }} -p:SmokeTestTargetFramework=net462
+
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:

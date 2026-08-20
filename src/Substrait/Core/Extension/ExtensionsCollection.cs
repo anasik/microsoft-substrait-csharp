@@ -8,6 +8,12 @@ using Substrait.Core.Extension.Types;
 using Substrait.Tools;
 using static Substrait.Core.Extension.ExtensionsDictionary;
 
+#if NET5_0_OR_GREATER
+using StringReadOnlySet = System.Collections.Generic.IReadOnlySet<string>;
+#else
+using StringReadOnlySet = System.Collections.Immutable.ImmutableHashSet<string>;
+#endif
+
 namespace Substrait.Core.Extension;
 
 /// <summary>
@@ -19,7 +25,7 @@ public sealed class ExtensionsCollection
     private readonly IReadOnlyList<ScalarFunctionImpl> scalarFunctionImpls;
     private readonly IReadOnlyList<AggregateFunctionImpl> aggregateFunctionImpls;
     private readonly IReadOnlyList<WindowFunctionImpl> windowFunctionImpls;
-    private readonly Lazy<IReadOnlySet<string>> namespaceSupplier;
+    private readonly Lazy<StringReadOnlySet> namespaceSupplier;
     private readonly Lazy<IReadOnlyDictionary<TypeVariationImplAnchor, TypeVariationImpl>> typeVariationImplsDictSupplier;
     private readonly Lazy<IReadOnlyDictionary<FunctionImplAnchor, ScalarFunctionImpl>> scalarFunctionImplsDictSupplier;
     private readonly Lazy<IReadOnlyDictionary<FunctionImplAnchor, AggregateFunctionImpl>> aggregateFunctionImplsDictSupplier;
@@ -46,7 +52,7 @@ public sealed class ExtensionsCollection
         this.scalarFunctionImpls = scalarFunctionImpls.ToImmutableList();
         this.aggregateFunctionImpls = aggregateFunctionImpls.ToImmutableList();
         this.windowFunctionImpls = windowFunctionImpls.ToImmutableList();
-        this.namespaceSupplier = new Lazy<IReadOnlySet<string>>(() =>
+        this.namespaceSupplier = new Lazy<StringReadOnlySet>(() =>
             this.typeVariationImpls.Select(implementation => implementation.Uri)
                 .Concat(this.scalarFunctionImpls.Select(implementation => implementation.Uri))
                 .Concat(this.aggregateFunctionImpls.Select(implementation => implementation.Uri))

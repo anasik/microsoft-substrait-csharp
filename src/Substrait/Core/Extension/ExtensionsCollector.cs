@@ -60,7 +60,11 @@ public class ExtensionsCollector
         /// </summary>
         public Builder()
         {
+#if NET5_0_OR_GREATER
             this.extensions = Enum.GetValues<ExtensionType>()
+#else
+            this.extensions = Enum.GetValues(typeof(ExtensionType)).Cast<ExtensionType>()
+#endif
                 .ToDictionary(type => type, _ => new UniqueList<(string Name, int ExtensionUriReference)>());
         }
 

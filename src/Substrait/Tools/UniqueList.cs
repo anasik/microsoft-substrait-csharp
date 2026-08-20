@@ -58,11 +58,19 @@ public class UniqueList<T>(IEqualityComparer<T> comparer) : IReadOnlyList<T>, IL
     /// <returns><see langword="true"/> when the item was added.</returns>
     public bool TryAdd(T item)
     {
+#if NET5_0_OR_GREATER
         if (!this.valueToIndex.TryAdd(item, this.values.Count))
         {
             return false;
         }
+#else
+        if (this.valueToIndex.ContainsKey(item))
+        {
+            return false;
+        }
 
+        this.valueToIndex.Add(item, this.values.Count);
+#endif
         this.values.Add(item);
         return true;
     }

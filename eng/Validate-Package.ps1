@@ -115,11 +115,14 @@ Assert-ArchiveEntries $PackagePath @(
     'Microsoft.Substrait.nuspec',
     'lib/net8.0/Microsoft.Substrait.dll',
     'lib/net8.0/Microsoft.Substrait.xml',
+    'lib/netstandard2.0/Microsoft.Substrait.dll',
+    'lib/netstandard2.0/Microsoft.Substrait.xml',
     'README.md'
 )
 Assert-ArchiveEntries $SymbolsPackagePath @(
     'Microsoft.Substrait.nuspec',
-    'lib/net8.0/Microsoft.Substrait.pdb'
+    'lib/net8.0/Microsoft.Substrait.pdb',
+    'lib/netstandard2.0/Microsoft.Substrait.pdb'
 )
 
 $nuspec = Read-Nuspec $PackagePath
@@ -151,23 +154,39 @@ if ($sourceLinkUrls -notcontains $expectedSubstraitSource) {
     throw "Source Link mapping '$expectedSubstraitSource' is missing."
 }
 
-$dependencyGroup = $metadata.dependencies.group
-Assert-Equal 'net8.0' $dependencyGroup.targetFramework 'Dependency target framework'
-
-$expectedDependencies = [ordered]@{
-    'Antlr4.Runtime.Standard' = '4.13.1'
-    'Google.Protobuf' = '3.26.1'
-    'YamlDotNet' = '15.1.2'
-}
-$actualDependencies = @($dependencyGroup.dependency)
-Assert-Equal $expectedDependencies.Count $actualDependencies.Count 'Runtime dependency count'
-
-foreach ($dependency in $actualDependencies) {
-    if (-not $expectedDependencies.Contains($dependency.id)) {
-        throw "Unexpected runtime dependency '$($dependency.id)'."
+$expectedDependencyGroups = [ordered]@{
+    'net8.0' = [ordered]@{
+        'Antlr4.Runtime.Standard' = '4.13.1'
+        'Google.Protobuf' = '3.26.1'
+        'YamlDotNet' = '15.1.2'
     }
+    '.NETStandard2.0' = [ordered]@{
+        'Antlr4.Runtime.Standard' = '4.13.1'
+        'Google.Protobuf' = '3.26.1'
+        'IndexRange' = '1.0.3'
+        'Microsoft.Bcl.HashCode' = '6.0.0'
+        'System.Memory' = '4.5.5'
+        'YamlDotNet' = '15.1.2'
+    }
+}
+$dependencyGroups = @($metadata.dependencies.group)
+Assert-Equal $expectedDependencyGroups.Count $dependencyGroups.Count 'Dependency group count'
 
-    Assert-Equal $expectedDependencies[$dependency.id] $dependency.version "Dependency '$($dependency.id)' version"
+foreach ($targetFramework in $expectedDependencyGroups.Keys) {
+    $matchingGroups = @($dependencyGroups | Where-Object targetFramework -EQ $targetFramework)
+    Assert-Equal 1 $matchingGroups.Count "Dependency group '$targetFramework' count"
+
+    $expectedDependencies = $expectedDependencyGroups[$targetFramework]
+    $actualDependencies = @($matchingGroups[0].dependency)
+    Assert-Equal $expectedDependencies.Count $actualDependencies.Count "Runtime dependency count for '$targetFramework'"
+
+    foreach ($dependency in $actualDependencies) {
+        if (-not $expectedDependencies.Contains($dependency.id)) {
+            throw "Unexpected runtime dependency '$($dependency.id)' for '$targetFramework'."
+        }
+
+        Assert-Equal $expectedDependencies[$dependency.id] $dependency.version "Dependency '$($dependency.id)' version for '$targetFramework'"
+    }
 }
 
 Write-Host "Validated Microsoft.Substrait $ExpectedVersion package and symbols."
