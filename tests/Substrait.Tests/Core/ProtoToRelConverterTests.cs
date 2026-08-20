@@ -145,6 +145,13 @@ public sealed class ProtoToRelConverterTests
         Assert.AreEqual(1, convertedHashJoin.Keys.Count);
         Join convertedJoin = (Join)convertedHashJoin.Left;
         Assert.IsInstanceOfType<Aggregate>(convertedJoin.Left);
+
+        ProtoRel serialized = new RelToProtoConverter().From(result);
+        SingleBucketExchange roundTripped = (SingleBucketExchange)this.converter.ToRel(serialized);
+        HashJoin roundTrippedHashJoin = (HashJoin)roundTripped.Input;
+
+        Assert.AreEqual(result, roundTripped);
+        Assert.IsTrue(roundTrippedHashJoin.BuildLeft);
     }
 
     [TestMethod]

@@ -1,4 +1,5 @@
 using Substrait.Core.Expression.Converters;
+using Substrait.Core.Extension;
 using Substrait.Core.Plan.Converters;
 using Substrait.Core.Type.Converters;
 using Substrait.Protobuf;
@@ -108,11 +109,101 @@ public class RelToProtoConverter
             return new ProtoRel { Set = set };
         }
 
-        public override ProtoRel Visit(Aggregate relation, PlanToProtoConverter.ConverterContext context) => Unsupported(relation);
-        public override ProtoRel Visit(Join relation, PlanToProtoConverter.ConverterContext context) => Unsupported(relation);
-        public override ProtoRel Visit(HashJoin relation, PlanToProtoConverter.ConverterContext context) => Unsupported(relation);
-        public override ProtoRel Visit(ScatterExchange relation, PlanToProtoConverter.ConverterContext context) => Unsupported(relation);
-        public override ProtoRel Visit(SingleBucketExchange relation, PlanToProtoConverter.ConverterContext context) => Unsupported(relation);
+        public override ProtoRel Visit(Aggregate relation, PlanToProtoConverter.ConverterContext context)
+        {
+            var aggregate = new AggregateRel { Input = context.GetOutput(relation.Input), Common = Common(relation.Transmute) };
+            aggregate.GroupingExpressions.AddRange(relation.GroupingExpressions.Select(expression => this.expressionConverter.From(expression, context)));
+            aggregate.Groupings.AddRange(relation.Groupings.Select(grouping =>
+            {
+                var result = new AggregateRel.Types.Grouping();
+                result.ExpressionReferences.AddRange(grouping.Expressions.Select(reference => (uint)reference));
+                return result;
+            }));
+            aggregate.Measures.AddRange(relation.Measures.Select(measure =>
+            {
+                var function = new AggregateFunction
+                {
+                    FunctionReference = (uint)context.AddExtension(ExtensionsCollector.ExtensionType.Function, measure.Function.Namespace, measure.Function.Key),
+                    OutputType = this.typeConverter.From(measure.Function.OutputType, context),
+                    Phase = measure.Function.Phase.ToProto(),
+                    Invocation = measure.Function.Invocation.ToProto(),
+                };
+                function.Arguments.AddRange(measure.Function.Arguments.Select(argument => argument switch
+                {
+                    Core.Type.IType type => new FunctionArgument { Type = this.typeConverter.From(type, context) },
+                    Core.Expression.IExpression expression => new FunctionArgument { Value = this.expressionConverter.From(expression, context) },
+                    Core.Expression.EnumArgumentValue option => new FunctionArgument { Enum = option.Option },
+                    _ => throw new NotSupportedException($"Unsupported function argument type: {argument.GetType().Name}"),
+                }));
+                return new AggregateRel.Types.Measure
+                {
+                    Measure_ = function,
+                    Filter = measure.PreMeasureFilter is null ? null : this.expressionConverter.From(measure.PreMeasureFilter, context),
+                };
+            }));
+            return new ProtoRel { Aggregate = aggregate };
+        }
+
+        public override ProtoRel Visit(Join relation, PlanToProtoConverter.ConverterContext context) =>
+            new()
+            {
+                Join = new()
+                {
+                    Left = context.GetOutput(relation.Left),
+                    Right = context.GetOutput(relation.Right),
+                    Type = relation.Type.ToProto(),
+                    Expression = relation.Condition is null ? null : this.expressionConverter.From(relation.Condition, context),
+                    PostJoinFilter = relation.PostJoinFilter is null ? null : this.expressionConverter.From(relation.PostJoinFilter, context),
+                    Common = Common(relation.Transmute),
+                },
+            };
+
+        public override ProtoRel Visit(HashJoin relation, PlanToProtoConverter.ConverterContext context)
+        {
+            var hashJoin = new HashJoinRel
+            {
+                Left = context.GetOutput(relation.Left),
+                Right = context.GetOutput(relation.Right),
+                Type = relation.Type.ToHashJoinProto(),
+                BuildInput = relation.BuildLeft ? HashJoinRel.Types.BuildInput.Left : HashJoinRel.Types.BuildInput.Right,
+                PostJoinFilter = relation.PostJoinFilter is null ? null : this.expressionConverter.From(relation.PostJoinFilter, context),
+                Common = Common(relation.Transmute),
+            };
+            hashJoin.Keys.AddRange(relation.Keys.Select(key => new ComparisonJoinKey
+            {
+                Left = this.expressionConverter.From(key.Left, context).Selection,
+                Right = this.expressionConverter.From(key.Right, context).Selection,
+                Comparison = key.Comparison.Simple == PhysicalJoin.ComparisonJoinKey.SimpleComparisonType.Unspecified
+                    ? new() { CustomFunctionReference = key.Comparison.CustomFunctionReference }
+                    : new() { Simple = key.Comparison.Simple.ToProto() },
+            }));
+            return new ProtoRel { HashJoin = hashJoin };
+        }
+
+        public override ProtoRel Visit(ScatterExchange relation, PlanToProtoConverter.ConverterContext context)
+        {
+            var exchange = new ExchangeRel
+            {
+                Input = context.GetOutput(relation.Input),
+                PartitionCount = relation.PartitionCount,
+                ScatterByFields = new(),
+                Common = Common(relation.Transmute),
+            };
+            exchange.ScatterByFields.Fields.AddRange(relation.Fields.Select(field => this.expressionConverter.From(field, context).Selection));
+            return new ProtoRel { Exchange = exchange };
+        }
+
+        public override ProtoRel Visit(SingleBucketExchange relation, PlanToProtoConverter.ConverterContext context) =>
+            new()
+            {
+                Exchange = new()
+                {
+                    Input = context.GetOutput(relation.Input),
+                    PartitionCount = relation.PartitionCount,
+                    SingleTarget = new() { Expression = this.expressionConverter.From(relation.Expression, context) },
+                    Common = Common(relation.Transmute),
+                },
+            };
         public override ProtoRel Visit(IRel other, PlanToProtoConverter.ConverterContext context) => Unsupported(other);
 
         private static ProtoRel Unsupported(IRel relation) =>
