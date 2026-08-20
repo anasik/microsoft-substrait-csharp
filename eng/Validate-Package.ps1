@@ -1,0 +1,119 @@
+param(
+    [Parameter(Mandatory = $true)]
+    [string] $PackagePath,
+
+    [Parameter(Mandatory = $true)]
+    [string] $SymbolsPackagePath,
+
+    [Parameter(Mandatory = $true)]
+    [string] $ExpectedVersion
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+function Assert-Equal {
+    param(
+        [object] $Expected,
+        [object] $Actual,
+        [string] $Description
+    )
+
+    if ($Expected -ne $Actual) {
+        throw "$Description. Expected '$Expected', found '$Actual'."
+    }
+}
+
+function Assert-ArchiveEntries {
+    param(
+        [string] $Path,
+        [string[]] $RequiredEntries
+    )
+
+    $archive = [System.IO.Compression.ZipFile]::OpenRead((Resolve-Path $Path))
+    try {
+        $entries = [System.Collections.Generic.HashSet[string]]::new(
+            [string[]] $archive.Entries.FullName,
+            [System.StringComparer]::Ordinal)
+
+        foreach ($requiredEntry in $RequiredEntries) {
+            if (-not $entries.Contains($requiredEntry)) {
+                throw "Package '$Path' is missing '$requiredEntry'."
+            }
+        }
+    }
+    finally {
+        $archive.Dispose()
+    }
+}
+
+function Read-Nuspec {
+    param([string] $Path)
+
+    $archive = [System.IO.Compression.ZipFile]::OpenRead((Resolve-Path $Path))
+    try {
+        $nuspecEntries = @($archive.Entries | Where-Object FullName -Like '*.nuspec')
+        Assert-Equal 1 $nuspecEntries.Count "Package '$Path' nuspec count"
+
+        $reader = [System.IO.StreamReader]::new($nuspecEntries[0].Open())
+        try {
+            return [xml] $reader.ReadToEnd()
+        }
+        finally {
+            $reader.Dispose()
+        }
+    }
+    finally {
+        $archive.Dispose()
+    }
+}
+
+Assert-ArchiveEntries $PackagePath @(
+    'Microsoft.Substrait.nuspec',
+    'lib/net8.0/Microsoft.Substrait.dll',
+    'lib/net8.0/Microsoft.Substrait.xml',
+    'README.md'
+)
+Assert-ArchiveEntries $SymbolsPackagePath @(
+    'Microsoft.Substrait.nuspec',
+    'lib/net8.0/Microsoft.Substrait.pdb'
+)
+
+$nuspec = Read-Nuspec $PackagePath
+$namespaceManager = [System.Xml.XmlNamespaceManager]::new($nuspec.NameTable)
+$namespaceManager.AddNamespace('n', $nuspec.DocumentElement.NamespaceURI)
+$metadata = $nuspec.SelectSingleNode('/n:package/n:metadata', $namespaceManager)
+
+Assert-Equal 'Microsoft.Substrait' $metadata.id 'Package ID'
+Assert-Equal $ExpectedVersion $metadata.version 'Package version'
+Assert-Equal 'Microsoft' $metadata.authors 'Package authors'
+Assert-Equal 'Apache-2.0' $metadata.license.InnerText 'Package license'
+Assert-Equal 'expression' $metadata.license.type 'Package license type'
+Assert-Equal 'README.md' $metadata.readme 'Package readme'
+Assert-Equal 'git' $metadata.repository.type 'Repository type'
+Assert-Equal 'https://github.com/microsoft/substrait-csharp' $metadata.repository.url 'Repository URL'
+
+if ([string]::IsNullOrWhiteSpace($metadata.repository.commit)) {
+    throw 'Package repository commit is missing.'
+}
+
+$dependencyGroup = $metadata.dependencies.group
+Assert-Equal 'net8.0' $dependencyGroup.targetFramework 'Dependency target framework'
+
+$expectedDependencies = [ordered]@{
+    'Antlr4.Runtime.Standard' = '4.13.1'
+    'Google.Protobuf' = '3.26.1'
+    'YamlDotNet' = '15.1.2'
+}
+$actualDependencies = @($dependencyGroup.dependency)
+Assert-Equal $expectedDependencies.Count $actualDependencies.Count 'Runtime dependency count'
+
+foreach ($dependency in $actualDependencies) {
+    if (-not $expectedDependencies.Contains($dependency.id)) {
+        throw "Unexpected runtime dependency '$($dependency.id)'."
+    }
+
+    Assert-Equal $expectedDependencies[$dependency.id] $dependency.version "Dependency '$($dependency.id)' version"
+}
+
+Write-Host "Validated Microsoft.Substrait $ExpectedVersion package and symbols."
