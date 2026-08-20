@@ -85,6 +85,70 @@ public sealed class ProtoToExpressionConverterTests
     }
 
     [TestMethod]
+    public void ConvertsCastTypeInputAndFailureBehavior()
+    {
+        ProtoExpression proto = new()
+        {
+            Cast = new ProtoExpression.Types.Cast
+            {
+                Input = new ProtoExpression { Literal = new ProtoLiteral { I32 = 42 } },
+                Type = new ProtoType
+                {
+                    I64 = new ProtoType.Types.I64 { Nullability = ProtoType.Types.Nullability.Nullable },
+                },
+                FailureBehavior = ProtoExpression.Types.Cast.Types.FailureBehavior.ReturnNull,
+            },
+        };
+
+        var result = (Substrait.Core.Expression.Expression.Cast)this.converter.From(proto);
+
+        Assert.IsInstanceOfType<PrimitiveType.I64>(result.Type);
+        Assert.AreEqual(IType.NullableType.Nullable, result.Type.Nullable);
+        Assert.AreEqual(Substrait.Core.Expression.Expression.Cast.FailureBehavior.ReturnNull, result.Behavior);
+        Assert.AreEqual(new Literal.I32Literal(42), result.Input);
+    }
+
+    [DataTestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public void ConvertsIfThenWithNullBranch(bool nullInThen)
+    {
+        ProtoExpression nullExpression = new()
+        {
+            Literal = new ProtoLiteral
+            {
+                Null = new ProtoType
+                {
+                    I32 = new ProtoType.Types.I32 { Nullability = ProtoType.Types.Nullability.Nullable },
+                },
+            },
+        };
+        ProtoExpression valueExpression = new() { Literal = new ProtoLiteral { I32 = 3 } };
+        ProtoExpression proto = new()
+        {
+            IfThen = new ProtoExpression.Types.IfThen
+            {
+                Ifs =
+                {
+                    new ProtoExpression.Types.IfThen.Types.IfClause
+                    {
+                        If = new ProtoExpression { Literal = new ProtoLiteral { Boolean = true } },
+                        Then = nullInThen ? nullExpression : valueExpression,
+                    },
+                },
+                Else = nullInThen ? valueExpression : nullExpression,
+            },
+        };
+
+        var result = (Substrait.Core.Expression.Expression.IfThen)this.converter.From(proto);
+
+        Assert.IsInstanceOfType<PrimitiveType.I32>(result.Type);
+        Assert.AreEqual(IType.NullableType.Nullable, result.Type.Nullable);
+        Assert.AreEqual(nullInThen, result.IfClauses[0].Then is Literal.NullLiteral);
+        Assert.AreEqual(!nullInThen, result.ElseClause is Literal.NullLiteral);
+    }
+
+    [TestMethod]
     public void ConvertsRootFieldReferenceAgainstInputSchema()
     {
         ParameterizedType.Struct schema = TypeFactory.REQUIRED.Struct([TypeFactory.REQUIRED.I32, TypeFactory.NULLABLE.STR]);
