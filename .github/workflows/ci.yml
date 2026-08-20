@@ -83,7 +83,7 @@ jobs:
           -mi SPDX:2.2
 
       - name: Restore package smoke test
-        run: dotnet restore tests/PackageSmokeTest/PackageSmokeTest.csproj -p:SmokeTestPackageVersion=${{ env.PREVIEW_PACKAGE_VERSION }} --source artifacts/packages --source https://api.nuget.org/v3/index.json --no-cache
+        run: dotnet restore tests/PackageSmokeTest/PackageSmokeTest.csproj -p:SmokeTestPackageVersion=${{ env.PREVIEW_PACKAGE_VERSION }} --source "artifacts/packages" --source "https://api.nuget.org/v3/index.json" --no-cache
 
       - name: Run package smoke test
         run: dotnet run --project tests/PackageSmokeTest/PackageSmokeTest.csproj --configuration Release --no-restore -p:SmokeTestPackageVersion=${{ env.PREVIEW_PACKAGE_VERSION }}
