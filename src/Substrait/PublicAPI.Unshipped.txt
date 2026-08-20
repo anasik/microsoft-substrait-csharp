@@ -1562,6 +1562,15 @@ static Substrait.Core.Relation.Converters.EnumExtensions.ToProto(this Substrait.
 static Substrait.Core.Relation.Converters.EnumExtensions.ToProto(this Substrait.Core.Relation.Set.SetOp op) -> Substrait.Protobuf.SetRel.Types.SetOp
 Substrait.Core.Expression.Converters.EnumExtensions
 Substrait.Core.Relation.Converters.EnumExtensions
+Substrait.Core.Expression.Converters.ProtoToExpressionConverter
+Substrait.Core.Expression.Converters.ProtoToExpressionConverter.CreateLiteral(Substrait.Protobuf.Expression.Types.Literal! protoLiteral) -> Substrait.Core.Expression.Literal!
+Substrait.Core.Expression.Converters.ProtoToExpressionConverter.CreateReference(Substrait.Protobuf.Expression.Types.FieldReference! fieldReference, Substrait.Core.Type.ParameterizedType.Struct! inputSchema, System.Collections.Generic.IReadOnlyList<Substrait.Core.Type.ParameterizedType.Struct!>! enclosingSchemas) -> Substrait.Core.Expression.FieldReference!
+Substrait.Core.Expression.Converters.ProtoToExpressionConverter.From(Substrait.Protobuf.Expression! protoExpression, Substrait.Core.Type.ParameterizedType.Struct! inputSchema, System.Collections.Generic.IReadOnlyList<Substrait.Core.Type.ParameterizedType.Struct!>! enclosingSchemas) -> Substrait.Core.Expression.IExpression!
+Substrait.Core.Expression.Converters.ProtoToExpressionConverter.From(Substrait.Protobuf.Expression! protoExpression) -> Substrait.Core.Expression.IExpression!
+Substrait.Core.Expression.Converters.ProtoToExpressionConverter.ProtoToExpressionConverter(Substrait.Core.Extension.ExtensionsDictionary! lookup, Substrait.Core.Extension.ExtensionsCollection! extensions, Substrait.Core.Type.Converters.ProtoToTypeConverter! protoTypeConverter, Substrait.Core.Extension.ExtensionsDictionary.StrictMode strictMode = Substrait.Core.Extension.ExtensionsDictionary.StrictMode.STRICT) -> void
+Substrait.Core.Expression.Converters.ProtoToFunctionArgConverter
+Substrait.Core.Expression.Converters.ProtoToFunctionArgConverter.From(Substrait.Protobuf.FunctionArgument! functionArgument, Substrait.Core.Type.ParameterizedType.Struct! inputSchema, System.Collections.Generic.IReadOnlyList<Substrait.Core.Type.ParameterizedType.Struct!>! enclosingSchemas) -> Substrait.Core.Expression.IFunctionArg!
+Substrait.Core.Expression.Converters.ProtoToFunctionArgConverter.ProtoToFunctionArgConverter(Substrait.Core.Expression.Converters.ProtoToExpressionConverter! expressionConverter, Substrait.Core.Type.Converters.ProtoToTypeConverter! typeConverter) -> void
 virtual Substrait.Core.Type.PrimitiveType.TypeName.get -> string!
 virtual Substrait.Core.Type.TypeBottomUpDispatcher<TContext, TOutput>.ShouldBailOut(TOutput result, TContext context) -> bool
 virtual Substrait.Core.Type.TypeTopDownDispatcher<TContext, TOutput>.ShouldBailOut(TOutput result, TContext context) -> bool
