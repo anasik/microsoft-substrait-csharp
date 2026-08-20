@@ -168,6 +168,63 @@ public sealed class ProtoToRelConverterTests
         Assert.ThrowsException<System.Runtime.Serialization.SerializationException>(() => this.converter.ToRel(relation));
     }
 
+    [TestMethod]
+    public void RoundTripsFoundationalRelationChain()
+    {
+        ProtoRel relation = new()
+        {
+            Project = new ProjectRel
+            {
+                Input = new ProtoRel
+                {
+                    Filter = new FilterRel
+                    {
+                        Input = CreateNamedRead(),
+                        Condition = new ProtoExpression { Literal = new ProtoExpression.Types.Literal { Boolean = true } },
+                        Common = new RelCommon(),
+                    },
+                },
+                Expressions = { new ProtoExpression { Literal = new ProtoExpression.Types.Literal { I64 = 42 } } },
+                Common = new RelCommon(),
+            },
+        };
+        IRel original = this.converter.ToRel(relation);
+
+        ProtoRel serialized = new RelToProtoConverter().From(original);
+        IRel roundTripped = this.converter.ToRel(serialized);
+
+        Assert.AreEqual(original, roundTripped);
+    }
+
+    [TestMethod]
+    public void RoundTripsScalarSubquery()
+    {
+        ProtoRel relation = new()
+        {
+            Project = new ProjectRel
+            {
+                Input = CreateNamedRead(),
+                Expressions =
+                {
+                    new ProtoExpression
+                    {
+                        Subquery = new ProtoExpression.Types.Subquery
+                        {
+                            Scalar = new ProtoExpression.Types.Subquery.Types.Scalar { Input = CreateNamedRead() },
+                        },
+                    },
+                },
+                Common = new RelCommon { Emit = new RelCommon.Types.Emit { OutputMapping = { 1 } } },
+            },
+        };
+        IRel original = this.converter.ToRel(relation);
+
+        ProtoRel serialized = new RelToProtoConverter().From(original);
+        IRel roundTripped = this.converter.ToRel(serialized);
+
+        Assert.AreEqual(original, roundTripped);
+    }
+
     private static ProtoExpression.Types.FieldReference CreateFieldReference(int field)
     {
         return new ProtoExpression.Types.FieldReference

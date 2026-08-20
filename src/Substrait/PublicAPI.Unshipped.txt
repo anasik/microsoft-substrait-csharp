@@ -1603,8 +1603,13 @@ Substrait.Core.Type.Converters.TypeToProtoConverter.From(Substrait.Core.Type.ITy
 Substrait.Core.Type.Converters.TypeToProtoConverter.TypeToProtoConverter() -> void
 Substrait.Core.Expression.Converters.ExpressionToProtoConverter
 Substrait.Core.Expression.Converters.ExpressionToProtoConverter.ExpressionToProtoConverter(Substrait.Core.Type.Converters.TypeToProtoConverter! typeConverter) -> void
+Substrait.Core.Expression.Converters.ExpressionToProtoConverter.ExpressionToProtoConverter(Substrait.Core.Type.Converters.TypeToProtoConverter! typeConverter, Substrait.Core.Relation.Converters.RelToProtoConverter? relationConverter) -> void
 Substrait.Core.Expression.Converters.ExpressionToProtoConverter.From(Substrait.Core.Expression.IExpression! expression, Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext! context) -> Substrait.Protobuf.Expression!
 Substrait.Core.Expression.Converters.ExpressionToProtoConverter.From(Substrait.Core.Expression.IExpression! expression) -> Substrait.Protobuf.Expression!
+Substrait.Core.Relation.Converters.RelToProtoConverter
+Substrait.Core.Relation.Converters.RelToProtoConverter.From(Substrait.Core.Relation.IRel! relation, Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext! context) -> Substrait.Protobuf.Rel!
+Substrait.Core.Relation.Converters.RelToProtoConverter.From(Substrait.Core.Relation.IRel! relation) -> Substrait.Protobuf.Rel!
+Substrait.Core.Relation.Converters.RelToProtoConverter.RelToProtoConverter() -> void
 virtual Substrait.Core.Type.PrimitiveType.TypeName.get -> string!
 virtual Substrait.Core.Type.TypeBottomUpDispatcher<TContext, TOutput>.ShouldBailOut(TOutput result, TContext context) -> bool
 virtual Substrait.Core.Type.TypeTopDownDispatcher<TContext, TOutput>.ShouldBailOut(TOutput result, TContext context) -> bool

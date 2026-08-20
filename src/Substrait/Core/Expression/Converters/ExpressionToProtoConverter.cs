@@ -1,5 +1,6 @@
 using Substrait.Core.Extension;
 using Substrait.Core.Plan.Converters;
+using Substrait.Core.Relation.Converters;
 using Substrait.Core.Type;
 using Substrait.Core.Type.Converters;
 using Substrait.Tools;
@@ -7,6 +8,7 @@ using static Substrait.Core.Expression.Literal;
 using static Substrait.Tools.TypeUtils;
 using ProtoExpression = Substrait.Protobuf.Expression;
 using ProtoLiteral = Substrait.Protobuf.Expression.Types.Literal;
+using ProtoSubquery = Substrait.Protobuf.Expression.Types.Subquery;
 
 namespace Substrait.Core.Expression.Converters;
 
@@ -19,8 +21,14 @@ public class ExpressionToProtoConverter
 
     /// <summary>Initializes an expression converter.</summary>
     public ExpressionToProtoConverter(TypeToProtoConverter typeConverter)
+        : this(typeConverter, null)
     {
-        this.dispatcher = new(new ExpressionToProtoVisitor(typeConverter));
+    }
+
+    /// <summary>Initializes an expression converter with optional subquery support.</summary>
+    public ExpressionToProtoConverter(TypeToProtoConverter typeConverter, RelToProtoConverter? relationConverter)
+    {
+        this.dispatcher = new(new ExpressionToProtoVisitor(typeConverter, relationConverter));
     }
 
     /// <summary>Converts an expression using a new context.</summary>
@@ -34,11 +42,13 @@ public class ExpressionToProtoConverter
     private sealed class ExpressionToProtoVisitor : ExpressionVisitor<PlanToProtoConverter.ConverterContext, ProtoExpression>
     {
         private static readonly ProtoExpression.Types.FieldReference.Types.RootReference RootReference = new();
+        private readonly RelToProtoConverter? relationConverter;
         private readonly TypeToProtoConverter typeConverter;
 
-        public ExpressionToProtoVisitor(TypeToProtoConverter typeConverter)
+        public ExpressionToProtoVisitor(TypeToProtoConverter typeConverter, RelToProtoConverter? relationConverter)
         {
             this.typeConverter = typeConverter;
+            this.relationConverter = relationConverter;
         }
 
         public override ProtoExpression Visit(FieldReference expression, PlanToProtoConverter.ConverterContext context)
@@ -140,20 +150,52 @@ public class ExpressionToProtoConverter
             throw new NotImplementedException($"Conversion for {expression.GetType().Name} is not implemented.");
 
         public override ProtoExpression Visit(Expression.ScalarSubquery expression, PlanToProtoConverter.ConverterContext context) =>
-            throw new NotImplementedException("Subquery conversion requires a relation converter.");
+            new() { Subquery = new() { Scalar = new() { Input = this.GetRelationConverter().From(expression.Subquery, context) } } };
 
-        public override ProtoExpression Visit(Expression.InPredicateSubquery expression, PlanToProtoConverter.ConverterContext context) =>
-            throw new NotImplementedException("Subquery conversion requires a relation converter.");
+        public override ProtoExpression Visit(Expression.InPredicateSubquery expression, PlanToProtoConverter.ConverterContext context)
+        {
+            var predicate = new ProtoSubquery.Types.InPredicate
+            {
+                Haystack = this.GetRelationConverter().From(expression.Subquery, context),
+            };
+            predicate.Needles.AddRange(expression.Values.Select(context.GetOutput));
+            return new ProtoExpression { Subquery = new ProtoSubquery { InPredicate = predicate } };
+        }
 
         public override ProtoExpression Visit(Expression.SetPredicateSubquery expression, PlanToProtoConverter.ConverterContext context) =>
-            throw new NotImplementedException("Subquery conversion requires a relation converter.");
+            new()
+            {
+                Subquery = new()
+                {
+                    SetPredicate = new()
+                    {
+                        Tuples = this.GetRelationConverter().From(expression.Subquery, context),
+                        PredicateOp = expression.Operation.ToProto(),
+                    },
+                },
+            };
 
         public override ProtoExpression Visit(Expression.SetComparisonSubquery expression, PlanToProtoConverter.ConverterContext context) =>
-            throw new NotImplementedException("Subquery conversion requires a relation converter.");
+            new()
+            {
+                Subquery = new()
+                {
+                    SetComparison = new()
+                    {
+                        Left = context.GetOutput(expression.Expression),
+                        ComparisonOp = expression.Comparison.ToProto(),
+                        ReductionOp = expression.Reduction.ToProto(),
+                        Right = this.GetRelationConverter().From(expression.Subquery, context),
+                    },
+                },
+            };
 
         public override ProtoExpression Visit(IExpression other, PlanToProtoConverter.ConverterContext context) =>
             throw new NotImplementedException($"Conversion for {other.GetType().Name} is not implemented.");
 
         private static ProtoExpression Wrap(ProtoLiteral literal) => new() { Literal = literal };
+
+        private RelToProtoConverter GetRelationConverter() =>
+            this.relationConverter ?? throw new InvalidOperationException("Subquery conversion requires a relation converter.");
     }
 }
