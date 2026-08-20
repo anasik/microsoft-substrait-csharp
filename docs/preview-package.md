@@ -20,8 +20,8 @@ preview releases may contain breaking API changes.
 - Both targets depend on `Antlr4.Runtime.Standard`, `Google.Protobuf`, and
   `YamlDotNet`. The `netstandard2.0` target also uses `IndexRange`,
   `Microsoft.Bcl.HashCode`, and `System.Memory` compatibility packages.
-- query-language, product-specific, product-specific, product-specific, downstream/downstream integration, and shared downstream
-  `TestData` assets remain outside the public package.
+- Product-specific integrations, schemas, and test assets remain outside the
+  public package.
 
 Package validation covers metadata, dependencies, license expression, README,
 symbols, Source Link, an SPDX 2.2 SBOM, and standalone package consumers on
@@ -32,7 +32,7 @@ clean-restore result.
 
 ## Remaining gate
 
-Behavioral comparison with the downstream implementation using an approved shared
-compatibility corpus is still required before package adoption and downstream adoption.
-The existing downstream fixture collections cannot be copied into this repository
-without the provenance review described in `tests/README.md`.
+Behavioral comparison with downstream consumers using an approved compatibility
+corpus is still required before package adoption. Existing non-public fixture
+collections cannot be copied into this repository without the provenance review
+described in `tests/README.md`.

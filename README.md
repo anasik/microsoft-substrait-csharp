@@ -74,9 +74,8 @@ CI jobs are the authoritative package restore and consumer validation.
 See [Preview package status](docs/preview-package.md) for the API stability and
 compatibility scope of the package artifacts.
 
-The package and assembly identity are provisional until the first package
-preview. See [the development plan](docs/preview-package.md) for the staged contribution
-work and open decisions.
+The package and assembly identity remain provisional until the first package
+preview.
 
 The `third_party/substrait` submodule pins the upstream specification used to
 generate protobuf and type-parser code. To upgrade it, check out the desired
