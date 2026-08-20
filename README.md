@@ -64,7 +64,7 @@ locally after packing a preview version, restore from the package output plus a
 public source and then run it:
 
 ```shell
-dotnet restore tests/PackageSmokeTest/PackageSmokeTest.csproj -p:SmokeTestPackageVersion=0.1.0-preview.1 --source artifacts/packages --source https://api.nuget.org/v3/index.json --no-cache
+dotnet restore tests/PackageSmokeTest/PackageSmokeTest.csproj -p:SmokeTestPackageVersion=0.1.0-preview.1 --configfile tests/PackageSmokeTest/NuGet.Config --no-cache
 dotnet run --project tests/PackageSmokeTest/PackageSmokeTest.csproj --configuration Release --no-restore -p:SmokeTestPackageVersion=0.1.0-preview.1
 ```
 
