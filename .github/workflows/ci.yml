@@ -12,6 +12,9 @@ on:
 permissions:
   contents: read
 
+env:
+  PREVIEW_PACKAGE_VERSION: 0.1.0-preview.${{ github.run_number }}
+
 jobs:
   build:
     name: ${{ matrix.os }}
@@ -48,11 +51,48 @@ jobs:
         run: dotnet test Substrait.sln --configuration Release --no-build --logger trx
 
       - name: Pack
-        run: dotnet pack src/Substrait/Substrait.csproj --configuration Release --no-build --output artifacts/packages
+        run: dotnet pack src/Substrait/Substrait.csproj --configuration Release --no-build --output artifacts/packages -p:PackageVersion=${{ env.PREVIEW_PACKAGE_VERSION }}
+
+      - name: Validate packages
+        shell: pwsh
+        run: >-
+          ./eng/Validate-Package.ps1
+          -PackagePath artifacts/packages/Microsoft.Substrait.${{ env.PREVIEW_PACKAGE_VERSION }}.nupkg
+          -SymbolsPackagePath artifacts/packages/Microsoft.Substrait.${{ env.PREVIEW_PACKAGE_VERSION }}.snupkg
+          -ExpectedVersion ${{ env.PREVIEW_PACKAGE_VERSION }}
+
+      - name: Restore SBOM tool
+        run: dotnet tool restore
+
+      - name: Generate SBOM
+        run: >-
+          dotnet tool run sbom-tool generate
+          -b artifacts/packages
+          -bc src/Substrait
+          -pn Microsoft.Substrait
+          -pv ${{ env.PREVIEW_PACKAGE_VERSION }}
+          -ps "Organization: Microsoft"
+          -nsb https://github.com/microsoft/substrait-csharp
+          -mi SPDX:2.2
+
+      - name: Validate SBOM
+        run: >-
+          dotnet tool run sbom-tool validate
+          -b artifacts/packages
+          -o artifacts/sbom-validation.json
+          -mi SPDX:2.2
+
+      - name: Restore package smoke test
+        run: dotnet restore tests/PackageSmokeTest/PackageSmokeTest.csproj -p:SmokeTestPackageVersion=${{ env.PREVIEW_PACKAGE_VERSION }} --configfile tests/PackageSmokeTest/NuGet.Config --no-cache
+
+      - name: Run package smoke test
+        run: dotnet run --project tests/PackageSmokeTest/PackageSmokeTest.csproj --configuration Release --no-restore -p:SmokeTestPackageVersion=${{ env.PREVIEW_PACKAGE_VERSION }}
 
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
           name: packages-${{ runner.os }}
-          path: artifacts/packages/*.*nupkg
+          path: |
+            artifacts/packages/*.*nupkg
+            artifacts/packages/_manifest/spdx_2.2/manifest.spdx.json
           if-no-files-found: error
