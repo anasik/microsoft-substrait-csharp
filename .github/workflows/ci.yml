@@ -61,6 +61,27 @@ jobs:
           -SymbolsPackagePath artifacts/packages/Microsoft.Substrait.${{ env.PREVIEW_PACKAGE_VERSION }}.snupkg
           -ExpectedVersion ${{ env.PREVIEW_PACKAGE_VERSION }}
 
+      - name: Restore SBOM tool
+        run: dotnet tool restore
+
+      - name: Generate SBOM
+        run: >-
+          dotnet tool run sbom-tool generate
+          -b artifacts/packages
+          -bc src/Substrait
+          -pn Microsoft.Substrait
+          -pv ${{ env.PREVIEW_PACKAGE_VERSION }}
+          -ps "Organization: Microsoft"
+          -nsb https://github.com/microsoft/substrait-csharp
+          -mi SPDX:2.2
+
+      - name: Validate SBOM
+        run: >-
+          dotnet tool run sbom-tool validate
+          -b artifacts/packages
+          -o artifacts/sbom-validation.json
+          -mi SPDX:2.2
+
       - name: Restore package smoke test
         run: dotnet restore tests/PackageSmokeTest/PackageSmokeTest.csproj -p:SmokeTestPackageVersion=${{ env.PREVIEW_PACKAGE_VERSION }} --source artifacts/packages --source https://api.nuget.org/v3/index.json --no-cache
 
@@ -71,5 +92,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: packages-${{ runner.os }}
-          path: artifacts/packages/*.*nupkg
+          path: |
+            artifacts/packages/*.*nupkg
+            artifacts/packages/_manifest/spdx_2.2/manifest.spdx.json
           if-no-files-found: error
