@@ -1,6 +1,7 @@
 using Substrait.Core.Expression;
 using Substrait.Core.Extension;
 using Substrait.Core.Relation;
+using Substrait.Core.Relation.Converters;
 using Substrait.Core.Type;
 using Substrait.Tools.Visitor;
 using ProtoExpression = Substrait.Protobuf.Expression;
@@ -14,6 +15,84 @@ namespace Substrait.Core.Plan.Converters;
 /// </summary>
 public class PlanToProtoConverter
 {
+    /// <summary>
+    /// Converts an internal plan to protobuf.
+    /// </summary>
+    /// <param name="plan">The internal plan.</param>
+    /// <returns>The protobuf plan.</returns>
+    public Protobuf.Plan From(IPlan plan)
+    {
+        if (plan.Roots.Count == 0)
+        {
+            throw new ArgumentException("Plan must contain at least one relation.");
+        }
+
+        if (plan.Roots.Count > 1)
+        {
+            throw new NotImplementedException("Plans with more than one relation are not supported yet.");
+        }
+
+        var context = new ConverterContext();
+        var relationConverter = new RelToProtoConverter();
+        var result = new Protobuf.Plan
+        {
+            Version = new Protobuf.Version
+            {
+                MajorNumber = plan.Version.MajorNumber,
+                MinorNumber = plan.Version.MinorNumber,
+                PatchNumber = plan.Version.PatchNumber,
+                GitHash = plan.Version.GitHash,
+                Producer = plan.Version.Producer,
+            },
+        };
+        result.Relations.AddRange(plan.Roots.Select(root => new Protobuf.PlanRel
+        {
+            Root = new Protobuf.RelRoot
+            {
+                Input = relationConverter.From(root.Input, context),
+                Names = { root.Names },
+            },
+        }));
+
+        ExtensionsCollector collected = context.ExtensionsCollector;
+        result.ExtensionUris.AddRange(collected.ExtensionUris.Select((uri, index) => new Protobuf.SimpleExtensionURI
+        {
+            Uri = uri,
+            ExtensionUriAnchor = (uint)index + 1,
+        }));
+
+        var nextAnchor = Enum.GetValues<ExtensionsCollector.ExtensionType>().ToDictionary(type => type, _ => 0U);
+        result.Extensions.AddRange(collected.Extensions.Select(extension =>
+        {
+            uint anchor = nextAnchor[extension.Type]++;
+            uint uriReference = (uint)extension.ExtensionUriReference + 1;
+            return extension.Type switch
+            {
+                ExtensionsCollector.ExtensionType.TypeVariation => new Protobuf.SimpleExtensionDeclaration
+                {
+                    ExtensionTypeVariation = new()
+                    {
+                        TypeVariationAnchor = anchor + 1,
+                        ExtensionUriReference = uriReference,
+                        Name = extension.Name,
+                    },
+                },
+                ExtensionsCollector.ExtensionType.Function => new Protobuf.SimpleExtensionDeclaration
+                {
+                    ExtensionFunction = new()
+                    {
+                        FunctionAnchor = anchor,
+                        ExtensionUriReference = uriReference,
+                        Name = extension.Name,
+                    },
+                },
+                _ => throw new NotImplementedException($"Extension type {extension.Type} is not supported."),
+            };
+        }));
+
+        return result;
+    }
+
     /// <summary>
     /// Stores intermediate converter outputs and collected extensions.
     /// </summary>

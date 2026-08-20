@@ -1,8 +1,12 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Substrait.Core.Expression;
 using Substrait.Core.Extension;
+using Substrait.Core.Extension.Functions;
+using Substrait.Core.Extension.Types;
 using Substrait.Core.Plan;
 using Substrait.Core.Plan.Converters;
 using Substrait.Core.Relation;
+using Substrait.Core.Type;
 using Substrait.Protobuf;
 using ProtoPlan = Substrait.Protobuf.Plan;
 using ProtoRel = Substrait.Protobuf.Rel;
@@ -51,6 +55,44 @@ public sealed class ProtoToPlanConverterTests
 
         Assert.ThrowsException<System.Runtime.Serialization.SerializationException>(() =>
             this.converter.From(plan, ExtensionsDictionary.StrictMode.OFF));
+    }
+
+    [TestMethod]
+    public void RoundTripsPlanSemantics()
+    {
+        IPlan original = this.converter.From(CreatePlan(), ExtensionsDictionary.StrictMode.OFF);
+
+        ProtoPlan serialized = new PlanToProtoConverter().From(original);
+        IPlan roundTripped = this.converter.From(serialized, ExtensionsDictionary.StrictMode.OFF);
+
+        Assert.AreEqual(original, roundTripped);
+    }
+
+    [TestMethod]
+    public void NumbersFunctionAndTypeVariationAnchorsIndependently()
+    {
+        var variation = new TypeVariationImpl("/types.yaml", "i64", "custom", string.Empty, FunctionBehavior.INHERITS);
+        var schema = new Substrait.Core.Type.NamedStruct(
+            ["value"],
+            TypeFactory.REQUIRED.Struct([TypeFactory.REQUIRED.I64_(variation)]));
+        var read = new NamedTableRead(schema, ["orders"], null);
+        var function = new Substrait.Core.Expression.Expression.ScalarFunctionInvocation(
+            "/functions.yaml",
+            "identity:i64",
+            [new Literal.I64Literal(1)],
+            TypeFactory.REQUIRED.I64,
+            null);
+        var project = new Project(read, [function]);
+        IPlan plan = new Substrait.Core.Plan.Plan(
+            [new Substrait.Core.Plan.Plan.Root(project, ["value", "result"])],
+            Substrait.Core.Plan.Version.Current);
+
+        ProtoPlan result = new PlanToProtoConverter().From(plan);
+
+        Assert.AreEqual(1U, result.Relations[0].Root.Input.Project.Input.Read.BaseSchema.Struct.Types_[0].I64.TypeVariationReference);
+        Assert.AreEqual(0U, result.Relations[0].Root.Input.Project.Expressions[0].ScalarFunction.FunctionReference);
+        Assert.AreEqual(1U, result.Extensions.Single(extension => extension.ExtensionTypeVariation is not null).ExtensionTypeVariation.TypeVariationAnchor);
+        Assert.AreEqual(0U, result.Extensions.Single(extension => extension.ExtensionFunction is not null).ExtensionFunction.FunctionAnchor);
     }
 
     private static ProtoPlan CreatePlan()
