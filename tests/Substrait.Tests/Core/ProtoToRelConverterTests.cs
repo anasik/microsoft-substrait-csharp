@@ -250,6 +250,65 @@ public sealed class ProtoToRelConverterTests
         Assert.AreEqual(TypeFactory.REQUIRED.BOOL, result.RecordType.Fields[0]);
     }
 
+    [DataTestMethod]
+    [DataRow(JoinRel.Types.JoinType.Inner, AbstractJoin.JoinType.Inner, "RR")]
+    [DataRow(JoinRel.Types.JoinType.Outer, AbstractJoin.JoinType.Outer, "NN")]
+    [DataRow(JoinRel.Types.JoinType.Left, AbstractJoin.JoinType.Left, "RN")]
+    [DataRow(JoinRel.Types.JoinType.Right, AbstractJoin.JoinType.Right, "NR")]
+    [DataRow(JoinRel.Types.JoinType.LeftSemi, AbstractJoin.JoinType.LeftSemi, "R")]
+    [DataRow(JoinRel.Types.JoinType.LeftAnti, AbstractJoin.JoinType.LeftAnti, "R")]
+    [DataRow(JoinRel.Types.JoinType.LeftSingle, AbstractJoin.JoinType.LeftSingle, "RN")]
+    [DataRow(JoinRel.Types.JoinType.LeftMark, AbstractJoin.JoinType.LeftMark, "RN")]
+    [DataRow(JoinRel.Types.JoinType.RightSemi, AbstractJoin.JoinType.RightSemi, "R")]
+    [DataRow(JoinRel.Types.JoinType.RightAnti, AbstractJoin.JoinType.RightAnti, "R")]
+    [DataRow(JoinRel.Types.JoinType.RightSingle, AbstractJoin.JoinType.RightSingle, "NR")]
+    [DataRow(JoinRel.Types.JoinType.RightMark, AbstractJoin.JoinType.RightMark, "RN")]
+    public void ConvertsLogicalJoinOutputShape(
+        JoinRel.Types.JoinType protoType,
+        AbstractJoin.JoinType expectedType,
+        string expectedNullability)
+    {
+        ProtoRel relation = new()
+        {
+            Join = new JoinRel
+            {
+                Left = CreateNamedRead(),
+                Right = CreateNamedRead(),
+                Type = protoType,
+                Common = new RelCommon(),
+            },
+        };
+
+        Join result = (Join)this.converter.ToRel(relation);
+
+        Assert.AreEqual(expectedType, result.Type);
+        Assert.AreEqual(expectedNullability.Length, result.RecordType.Fields.Count);
+        for (int index = 0; index < expectedNullability.Length; index++)
+        {
+            IType.NullableType expected = expectedNullability[index] == 'N'
+                ? IType.NullableType.Nullable
+                : IType.NullableType.Required;
+            Assert.AreEqual(expected, result.RecordType.Fields[index].Nullable);
+        }
+    }
+
+    [TestMethod]
+    public void RejectsUnspecifiedLogicalJoin()
+    {
+        ProtoRel relation = new()
+        {
+            Join = new JoinRel
+            {
+                Left = CreateNamedRead(),
+                Right = CreateNamedRead(),
+                Type = JoinRel.Types.JoinType.Unspecified,
+                Common = new RelCommon(),
+            },
+        };
+
+        Assert.ThrowsException<ArgumentException>(() => this.converter.ToRel(relation));
+    }
+
     [TestMethod]
     public void ConvertsAggregateJoinHashJoinAndExchange()
     {
