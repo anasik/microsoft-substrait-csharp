@@ -1,3 +1,4 @@
+using Google.Protobuf;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Substrait.Core.Expression;
 using Substrait.Core.Extension;
@@ -8,6 +9,7 @@ using Substrait.Core.Plan.Converters;
 using Substrait.Core.Relation;
 using Substrait.Core.Type;
 using Substrait.Protobuf;
+using Substrait.Tools;
 using ProtoPlan = Substrait.Protobuf.Plan;
 using ProtoRel = Substrait.Protobuf.Rel;
 using ProtoVersion = Substrait.Protobuf.Version;
@@ -95,6 +97,99 @@ public sealed class ProtoToPlanConverterTests
         Assert.AreEqual(0U, result.Extensions.Single(extension => extension.ExtensionFunction is not null).ExtensionFunction.FunctionAnchor);
     }
 
+    [TestMethod]
+    public void ConvertedPlanRoundTripsDeterministicallyThroughBinaryAndJson()
+    {
+        IPlan original = this.converter.From(CreatePlan(), ExtensionsDictionary.StrictMode.OFF);
+        PlanToProtoConverter serializer = new();
+        ProtoPlan serialized = serializer.From(original);
+        string directory = Path.Combine(Path.GetTempPath(), nameof(ProtoToPlanConverterTests), Guid.NewGuid().ToString("N"));
+        string binaryPath = Path.Combine(directory, "plan.pb");
+        string jsonPath = Path.Combine(directory, "plan.json");
+
+        try
+        {
+            FileUtils.WritePlan(serialized, binaryPath, FileUtils.FileType.Protobuf);
+            FileUtils.WritePlan(serialized, jsonPath, FileUtils.FileType.Json);
+
+            CollectionAssert.AreEqual(serialized.ToByteArray(), File.ReadAllBytes(binaryPath));
+            CollectionAssert.AreEqual(serialized.ToByteArray(), serializer.From(original).ToByteArray());
+            Assert.AreEqual(
+                original,
+                this.converter.From(FileUtils.FetchPlan(binaryPath, FileUtils.FileType.Protobuf), ExtensionsDictionary.StrictMode.OFF));
+            Assert.AreEqual(
+                original,
+                this.converter.From(FileUtils.FetchPlan(jsonPath, FileUtils.FileType.Json), ExtensionsDictionary.StrictMode.OFF));
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [TestMethod]
+    public void FunctionResolutionHonorsStrictMode()
+    {
+        ProtoPlan plan = CreatePlanWithExtensions(
+            new SimpleExtensionDeclaration
+            {
+                ExtensionFunction = new()
+                {
+                    ExtensionUriReference = 1,
+                    FunctionAnchor = 0,
+                    Name = "missing:i64",
+                },
+            });
+        plan.Relations[0].Root.Input = new ProtoRel
+        {
+            Project = new ProjectRel
+            {
+                Input = CreateRead(),
+                Expressions =
+                {
+                    new Protobuf.Expression
+                    {
+                        ScalarFunction = new Protobuf.Expression.Types.ScalarFunction
+                        {
+                            FunctionReference = 0,
+                            OutputType = RequiredI64(),
+                        },
+                    },
+                },
+                Common = new RelCommon(),
+            },
+        };
+
+        IPlan nonStrict = this.converter.From(plan, ExtensionsDictionary.StrictMode.OFF);
+
+        Assert.IsNull(((Substrait.Core.Expression.Expression.ScalarFunctionInvocation)((Project)nonStrict.Roots[0].Input).Expressions[0]).Declaration);
+        Assert.ThrowsException<ArgumentException>(() => this.converter.From(plan, ExtensionsDictionary.StrictMode.FUNCTION));
+    }
+
+    [TestMethod]
+    public void TypeVariationResolutionHonorsStrictMode()
+    {
+        ProtoPlan plan = CreatePlanWithExtensions(
+            new SimpleExtensionDeclaration
+            {
+                ExtensionTypeVariation = new()
+                {
+                    ExtensionUriReference = 1,
+                    TypeVariationAnchor = 1,
+                    Name = "missing",
+                },
+            });
+        plan.Relations[0].Root.Input.Read.BaseSchema.Struct.Types_[0].I64.TypeVariationReference = 1;
+
+        IPlan nonStrict = this.converter.From(plan, ExtensionsDictionary.StrictMode.OFF);
+
+        Assert.IsNull(((NamedTableRead)nonStrict.Roots[0].Input).RecordType.Fields[0].TypeVariation);
+        Assert.ThrowsException<ArgumentException>(() => this.converter.From(plan, ExtensionsDictionary.StrictMode.TYPE_VARIATION));
+    }
+
     private static ProtoPlan CreatePlan()
     {
         return new ProtoPlan
@@ -121,6 +216,25 @@ public sealed class ProtoToPlanConverterTests
         };
     }
 
+    private static ProtoPlan CreatePlanWithExtensions(SimpleExtensionDeclaration extension)
+    {
+        ProtoPlan plan = CreatePlan();
+        plan.ExtensionUris.Add(new SimpleExtensionURI { ExtensionUriAnchor = 1, Uri = "/missing.yaml" });
+        plan.Extensions.Add(extension);
+        return plan;
+    }
+
+    private static Substrait.Protobuf.Type RequiredI64()
+    {
+        return new Substrait.Protobuf.Type
+        {
+            I64 = new Substrait.Protobuf.Type.Types.I64
+            {
+                Nullability = Substrait.Protobuf.Type.Types.Nullability.Required,
+            },
+        };
+    }
+
     private static ProtoRel CreateRead()
     {
         return new ProtoRel
@@ -134,13 +248,7 @@ public sealed class ProtoToPlanConverterTests
                     {
                         Types_ =
                         {
-                            new Substrait.Protobuf.Type
-                            {
-                                I64 = new Substrait.Protobuf.Type.Types.I64
-                                {
-                                    Nullability = Substrait.Protobuf.Type.Types.Nullability.Required,
-                                },
-                            },
+                            RequiredI64(),
                         },
                         Nullability = Substrait.Protobuf.Type.Types.Nullability.Required,
                     },

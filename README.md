@@ -59,6 +59,22 @@ The `third_party/substrait` submodule pins the upstream specification used to
 generate protobuf and type-parser code. To upgrade it, check out the desired
 upstream release in that directory and commit the updated submodule pointer.
 
+## Conversion and serialization
+
+Use `ProtoToPlanConverter` and `PlanToProtoConverter` to convert between
+generated protobuf plans and the immutable internal representation. Extension
+references can be resolved strictly or selectively with
+`ExtensionsDictionary.StrictMode`; non-strict conversion preserves unresolved
+function references but cannot attach their declarations.
+
+`FileUtils` reads and writes protobuf binary and protobuf JSON plan files.
+Converting a plan does not add nondeterministic metadata, so repeated protobuf
+serialization of the same internal plan produces the same bytes.
+
+Plan conversion currently supports exactly one relation root. Empty internal
+plans and plans with multiple roots cannot be serialized, and protobuf plans
+with multiple relations cannot be converted to the internal representation.
+
 ## Contributing
 
 Here are some ways you can contribute to the substrait-csharp project:
