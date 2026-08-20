@@ -49,8 +49,8 @@ public sealed class RelationVisitorTests
         new RelBottomUpDispatcher<StringBuilderContext, VoidOutput>(new RelationPrinter())
             .Dispatch(root, bottomUpContext);
 
-        Assert.AreEqual("Project|Filter|NamedTableRead|", topDownContext.ToString());
-        Assert.AreEqual("NamedTableRead|Filter|Project|", bottomUpContext.ToString());
+        Assert.AreEqual("Project|Cross|Filter|NamedTableRead|NamedTableRead|", topDownContext.ToString());
+        Assert.AreEqual("NamedTableRead|Filter|NamedTableRead|Cross|Project|", bottomUpContext.ToString());
     }
 
     [TestMethod]
@@ -66,24 +66,38 @@ public sealed class RelationVisitorTests
     }
 
     [TestMethod]
-    public void DispatchersBailOutWhenProjectIsFound()
+    public void DispatchersBailOutWhenInteriorFilterIsFound()
     {
         IRel root = CreateRelationTree(true);
-        NoOpContext<IRel, bool> context = new();
+        BoolStringBuilderContext topDownContext = new();
+        BoolStringBuilderContext bottomUpContext = new();
 
-        Assert.IsTrue(new ProjectFindingTopDownDispatcher().Dispatch(root, context));
-        Assert.IsTrue(new ProjectFindingBottomUpDispatcher().Dispatch(root, context));
+        Assert.IsTrue(new FilterFindingTopDownDispatcher().Dispatch(root, topDownContext));
+        Assert.IsTrue(new FilterFindingBottomUpDispatcher().Dispatch(root, bottomUpContext));
+        Assert.AreEqual("Project|Cross|Filter|", topDownContext.ToString());
+        Assert.AreEqual("NamedTableRead|Filter|", bottomUpContext.ToString());
     }
 
     private static Project CreateRelationTree(bool condition)
     {
         NamedStruct schema = new(["value"], TypeFactory.REQUIRED.Struct([TypeFactory.REQUIRED.I64]));
-        NamedTableRead read = new(schema, ["orders"], filter: null);
-        Filter filter = new(read, new BoolLiteral(condition));
-        return new Project(filter, [new FieldReference(TypeFactory.REQUIRED.I64, 0)]);
+        NamedTableRead orders = new(schema, ["orders"], filter: null);
+        NamedTableRead customers = new(schema, ["customers"], filter: null);
+        Filter filter = new(orders, new BoolLiteral(condition));
+        Cross cross = new(filter, customers);
+        return new Project(cross, [new FieldReference(TypeFactory.REQUIRED.I64, 0)]);
     }
 
     private sealed class StringBuilderContext : NoOpContext<IRel, VoidOutput>
+    {
+        private readonly StringBuilder builder = new();
+
+        public void Append(string value) => this.builder.Append(value).Append('|');
+
+        public override string ToString() => this.builder.ToString();
+    }
+
+    private sealed class BoolStringBuilderContext : NoOpContext<IRel, bool>
     {
         private readonly StringBuilder builder = new();
 
@@ -106,32 +120,40 @@ public sealed class RelationVisitorTests
         }
     }
 
-    private sealed class ProjectFindingTopDownDispatcher
-        : RelTopDownDispatcher<NoOpContext<IRel, bool>, bool>
+    private sealed class FilterFindingTopDownDispatcher
+        : RelTopDownDispatcher<BoolStringBuilderContext, bool>
     {
-        public ProjectFindingTopDownDispatcher()
-            : base(new ProjectFinder())
+        public FilterFindingTopDownDispatcher()
+            : base(new FilterFinder())
         {
         }
 
-        protected override bool ShouldBailOut(bool result, NoOpContext<IRel, bool> context) => result;
+        protected override bool ShouldBailOut(bool result, BoolStringBuilderContext context) => result;
     }
 
-    private sealed class ProjectFindingBottomUpDispatcher
-        : RelBottomUpDispatcher<NoOpContext<IRel, bool>, bool>
+    private sealed class FilterFindingBottomUpDispatcher
+        : RelBottomUpDispatcher<BoolStringBuilderContext, bool>
     {
-        public ProjectFindingBottomUpDispatcher()
-            : base(new ProjectFinder())
+        public FilterFindingBottomUpDispatcher()
+            : base(new FilterFinder())
         {
         }
 
-        protected override bool ShouldBailOut(bool result, NoOpContext<IRel, bool> context) => result;
+        protected override bool ShouldBailOut(bool result, BoolStringBuilderContext context) => result;
     }
 
-    private sealed class ProjectFinder : DefaultRelVisitor<NoOpContext<IRel, bool>, bool>
+    private sealed class FilterFinder : DefaultRelVisitor<BoolStringBuilderContext, bool>
     {
-        public override bool Visit(Project project, NoOpContext<IRel, bool> context) => true;
+        public override bool Visit(Filter filter, BoolStringBuilderContext context)
+        {
+            context.Append(nameof(Filter));
+            return true;
+        }
 
-        protected override bool DefaultVisit(IRel relation, NoOpContext<IRel, bool> context) => false;
+        protected override bool DefaultVisit(IRel relation, BoolStringBuilderContext context)
+        {
+            context.Append(relation.GetType().Name);
+            return false;
+        }
     }
 }
