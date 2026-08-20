@@ -53,6 +53,14 @@ jobs:
       - name: Pack
         run: dotnet pack src/Substrait/Substrait.csproj --configuration Release --no-build --output artifacts/packages -p:PackageVersion=${{ env.PREVIEW_PACKAGE_VERSION }}
 
+      - name: Validate packages
+        shell: pwsh
+        run: >-
+          ./eng/Validate-Package.ps1
+          -PackagePath artifacts/packages/Microsoft.Substrait.${{ env.PREVIEW_PACKAGE_VERSION }}.nupkg
+          -SymbolsPackagePath artifacts/packages/Microsoft.Substrait.${{ env.PREVIEW_PACKAGE_VERSION }}.snupkg
+          -ExpectedVersion ${{ env.PREVIEW_PACKAGE_VERSION }}
+
       - name: Restore package smoke test
         run: dotnet restore tests/PackageSmokeTest/PackageSmokeTest.csproj -p:SmokeTestPackageVersion=${{ env.PREVIEW_PACKAGE_VERSION }} --source artifacts/packages --source https://api.nuget.org/v3/index.json --no-cache
 
