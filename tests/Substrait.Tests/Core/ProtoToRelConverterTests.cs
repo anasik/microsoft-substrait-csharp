@@ -77,6 +77,46 @@ public sealed class ProtoToRelConverterTests
     }
 
     [TestMethod]
+    public void ConvertsSetComparisonSubqueryThroughRelationConverter()
+    {
+        ProtoRel relation = new()
+        {
+            Project = new ProjectRel
+            {
+                Input = CreateNamedRead(),
+                Expressions =
+                {
+                    new ProtoExpression
+                    {
+                        Subquery = new ProtoExpression.Types.Subquery
+                        {
+                            SetComparison = new ProtoExpression.Types.Subquery.Types.SetComparison
+                            {
+                                Left = new ProtoExpression
+                                {
+                                    Literal = new ProtoExpression.Types.Literal { I64 = 2 },
+                                },
+                                ComparisonOp = ProtoExpression.Types.Subquery.Types.SetComparison.Types.ComparisonOp.Lt,
+                                ReductionOp = ProtoExpression.Types.Subquery.Types.SetComparison.Types.ReductionOp.All,
+                                Right = CreateNamedRead(),
+                            },
+                        },
+                    },
+                },
+                Common = new RelCommon { Emit = new RelCommon.Types.Emit { OutputMapping = { 1 } } },
+            },
+        };
+
+        Project result = (Project)this.converter.ToRel(relation);
+        var comparison = (Substrait.Core.Expression.Expression.SetComparisonSubquery)result.Expressions[0];
+
+        Assert.AreEqual(new Literal.I64Literal(2), comparison.Expression);
+        Assert.AreEqual(Substrait.Core.Expression.Expression.SetComparisonSubquery.ComparisonOp.LessThan, comparison.Comparison);
+        Assert.AreEqual(Substrait.Core.Expression.Expression.SetComparisonSubquery.ReductionOp.All, comparison.Reduction);
+        Assert.IsInstanceOfType<NamedTableRead>(comparison.Subquery);
+    }
+
+    [TestMethod]
     public void ConvertsAggregateJoinHashJoinAndExchange()
     {
         ProtoRel aggregate = new()
