@@ -68,6 +68,49 @@ function Read-Nuspec {
     }
 }
 
+function Read-SourceLinkUrls {
+    param([string] $Path)
+
+    $archive = [System.IO.Compression.ZipFile]::OpenRead((Resolve-Path $Path))
+    try {
+        $pdbEntry = $archive.GetEntry('lib/net8.0/Microsoft.Substrait.pdb')
+        $pdbStream = [System.IO.MemoryStream]::new()
+        $entryStream = $pdbEntry.Open()
+        try {
+            $entryStream.CopyTo($pdbStream)
+        }
+        finally {
+            $entryStream.Dispose()
+        }
+
+        $pdbStream.Position = 0
+        $provider = [System.Reflection.Metadata.MetadataReaderProvider]::FromPortablePdbStream($pdbStream)
+        try {
+            $reader = $provider.GetMetadataReader()
+            $module = [System.Reflection.Metadata.Ecma335.MetadataTokens]::EntityHandle(
+                [System.Reflection.Metadata.Ecma335.TableIndex]::Module,
+                1)
+            $sourceLinkKind = [Guid] 'CC110556-A091-4D38-9FEC-25AB9A351A6A'
+            $sourceLinkRecords = @(
+                $reader.GetCustomDebugInformation($module) |
+                    ForEach-Object { $reader.GetCustomDebugInformation($_) } |
+                    Where-Object { $reader.GetGuid($_.Kind) -eq $sourceLinkKind })
+            Assert-Equal 1 $sourceLinkRecords.Count 'Source Link record count'
+
+            $sourceLinkBytes = $reader.GetBlobBytes($sourceLinkRecords[0].Value)
+            $sourceLink = [System.Text.Encoding]::UTF8.GetString($sourceLinkBytes) | ConvertFrom-Json
+            return @($sourceLink.documents.PSObject.Properties.Value)
+        }
+        finally {
+            $provider.Dispose()
+            $pdbStream.Dispose()
+        }
+    }
+    finally {
+        $archive.Dispose()
+    }
+}
+
 Assert-ArchiveEntries $PackagePath @(
     'Microsoft.Substrait.nuspec',
     'lib/net8.0/Microsoft.Substrait.dll',
@@ -95,6 +138,17 @@ Assert-Equal 'https://github.com/microsoft/substrait-csharp' $metadata.repositor
 
 if ([string]::IsNullOrWhiteSpace($metadata.repository.commit)) {
     throw 'Package repository commit is missing.'
+}
+
+$sourceLinkUrls = @(Read-SourceLinkUrls $SymbolsPackagePath)
+$expectedRepositorySource = "https://raw.githubusercontent.com/microsoft/substrait-csharp/$($metadata.repository.commit)/*"
+$expectedSubstraitSource = 'https://raw.githubusercontent.com/substrait-io/substrait/d430e521f203aec6a4e06731d4bfd68cdf61f443/*'
+if ($sourceLinkUrls -notcontains $expectedRepositorySource) {
+    throw "Source Link mapping '$expectedRepositorySource' is missing."
+}
+
+if ($sourceLinkUrls -notcontains $expectedSubstraitSource) {
+    throw "Source Link mapping '$expectedSubstraitSource' is missing."
 }
 
 $dependencyGroup = $metadata.dependencies.group
