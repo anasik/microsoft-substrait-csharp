@@ -143,6 +143,61 @@ public sealed class ProtoToRelConverterTests
     }
 
     [TestMethod]
+    public void ConvertsVirtualTableReadRows()
+    {
+        var nullableI32 = new ProtoType.Types.I32 { Nullability = ProtoType.Types.Nullability.Nullable };
+        ProtoRel relation = new()
+        {
+            Read = new ReadRel
+            {
+                BaseSchema = new Substrait.Protobuf.NamedStruct
+                {
+                    Names = { "value" },
+                    Struct = new ProtoType.Types.Struct
+                    {
+                        Types_ = { new ProtoType { I32 = nullableI32 } },
+                        Nullability = ProtoType.Types.Nullability.Required,
+                    },
+                },
+                VirtualTable = new ReadRel.Types.VirtualTable
+                {
+                    Expressions =
+                    {
+                        new ProtoExpression.Types.Nested.Types.Struct
+                        {
+                            Fields = { new ProtoExpression { Literal = new ProtoExpression.Types.Literal { I32 = 10 } } },
+                        },
+                        new ProtoExpression.Types.Nested.Types.Struct
+                        {
+                            Fields =
+                            {
+                                new ProtoExpression
+                                {
+                                    Literal = new ProtoExpression.Types.Literal
+                                    {
+                                        Null = new ProtoType { I32 = nullableI32 },
+                                        Nullable = true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                Common = new RelCommon(),
+            },
+        };
+
+        VirtualTableRead result = (VirtualTableRead)this.converter.ToRel(relation);
+
+        Assert.AreEqual("value", result.InitialSchema.Names[0]);
+        Assert.AreEqual(TypeFactory.NULLABLE.I32, result.RecordType.Fields[0]);
+        Assert.AreEqual(2, result.Rows.Count);
+        Assert.AreEqual(new Literal.I32Literal(10), result.Rows[0].Fields[0]);
+        Assert.IsInstanceOfType<Literal.NullLiteral>(result.Rows[1].Fields[0]);
+        Assert.AreEqual(TypeFactory.NULLABLE.I32, result.Rows[1].Fields[0].Type);
+    }
+
+    [TestMethod]
     public void ConvertsAggregateJoinHashJoinAndExchange()
     {
         ProtoRel aggregate = new()
