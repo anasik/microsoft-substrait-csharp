@@ -542,6 +542,8 @@ static readonly Substrait.Tools.Visitor.VoidOutput.Instance -> Substrait.Tools.V
 static Substrait.Core.Extension.Functions.FunctionImpl.ConstructKey(string! name, System.Collections.Generic.IReadOnlyList<Substrait.Core.Extension.Functions.IArgument!>! arguments) -> string!
 static Substrait.Core.Extension.Functions.TypeExpressionFactory.Of(Substrait.Core.Type.IType.NullableType nullable) -> Substrait.Core.Extension.Functions.TypeExpressionFactory!
 static Substrait.Core.Extension.Functions.TypeExpressionParser.Parse(string! typeExpressionStr) -> Substrait.Core.Extension.Functions.ITypeExpression!
+static Substrait.Core.Type.Converters.EnumExtensions.FromProto(this Substrait.Protobuf.Type.Types.Nullability nullable) -> Substrait.Core.Type.IType.NullableType
+static Substrait.Core.Type.Converters.EnumExtensions.ToProto(this Substrait.Core.Type.IType.NullableType nullable) -> Substrait.Protobuf.Type.Types.Nullability
 static Substrait.Core.Type.PrimitiveType.Binary.Of(Substrait.Core.Type.IType.NullableType nullable, Substrait.Core.Extension.Types.ITypeVariation? typeVariation = null) -> Substrait.Core.Type.PrimitiveType.Binary!
 static Substrait.Core.Type.PrimitiveType.Bool.Of(Substrait.Core.Type.IType.NullableType nullable, Substrait.Core.Extension.Types.ITypeVariation? typeVariation = null) -> Substrait.Core.Type.PrimitiveType.Bool!
 static Substrait.Core.Type.PrimitiveType.Date.Of(Substrait.Core.Type.IType.NullableType nullable, Substrait.Core.Extension.Types.ITypeVariation? typeVariation = null) -> Substrait.Core.Type.PrimitiveType.Date!
@@ -559,6 +561,10 @@ static Substrait.Core.Type.PrimitiveTypeFactory.Of(Substrait.Core.Type.IType.Nul
 static Substrait.Core.Type.TypeFactory.Of(Substrait.Core.Type.IType.NullableType nullable) -> Substrait.Core.Type.TypeFactory!
 static Substrait.Tools.EnumUtils.Cast<TSource, TTarget>(TSource source) -> TTarget
 static Substrait.Tools.EnumUtils.IsOn<T>(this T e, T flag) -> bool
+static Substrait.Tools.ExtensionUtils.BuildExtensionCollection(string! namespaceStr, Substrait.Core.Extension.ExtensionDefinitions! extensionSignatures) -> Substrait.Core.Extension.ExtensionsCollection!
+static Substrait.Tools.ExtensionUtils.Load(string! namespaceStr, System.IO.Stream! stream) -> Substrait.Core.Extension.ExtensionsCollection!
+static Substrait.Tools.ExtensionUtils.Load(System.Collections.Generic.IEnumerable<Substrait.Tools.ExtensionUtils.ExtensionFile>! extensionFiles, Substrait.Tools.ExtensionUtils.IExtensionFileResolver! resolver) -> Substrait.Core.Extension.ExtensionsCollection!
+static Substrait.Tools.ExtensionUtils.LoadDefaults() -> Substrait.Core.Extension.ExtensionsCollection!
 static Substrait.Tools.ObjectUtils.CombineHashCodes<T>(this System.Collections.Generic.IEnumerable<T>! values, int seed = 0) -> int
 static Substrait.Tools.ObjectUtils.EqualsWithNull<T>(this T? value, T? other) -> bool
 static Substrait.Tools.ObjectUtils.NodeEqualsImpl<TNode, TDispatcher>(this TNode node, TNode? other) -> bool
@@ -818,6 +824,51 @@ Substrait.Core.Expression.SortField.SortDirection.SortDirectionDescNullsFirst = 
 Substrait.Core.Expression.SortField.SortDirection.SortDirectionDescNullsLast = 4 -> Substrait.Core.Expression.SortField.SortDirection
 Substrait.Core.Expression.SortField.SortDirection.Unspecified = 0 -> Substrait.Core.Expression.SortField.SortDirection
 Substrait.Core.Expression.SortField.SortField(Substrait.Core.Expression.IExpression! expr, Substrait.Core.Expression.SortField.SortDirection sortDirection) -> void
+Substrait.Core.Extension.ExtensionDefinitions
+Substrait.Core.Extension.ExtensionDefinitions.AggregateFunctions.get -> System.Collections.Generic.IReadOnlyList<Substrait.Core.Extension.Functions.AggregateFunction!>!
+Substrait.Core.Extension.ExtensionDefinitions.AggregateFunctions.init -> void
+Substrait.Core.Extension.ExtensionDefinitions.ExtensionDefinitions() -> void
+Substrait.Core.Extension.ExtensionDefinitions.ExtensionDefinitions(System.Collections.Generic.IEnumerable<Substrait.Core.Extension.Types.TypeVariation!>! typeVariations, System.Collections.Generic.IEnumerable<Substrait.Core.Extension.Functions.ScalarFunction!>! scalarFunctions, System.Collections.Generic.IEnumerable<Substrait.Core.Extension.Functions.AggregateFunction!>! aggregateFunctions, System.Collections.Generic.IEnumerable<Substrait.Core.Extension.Functions.WindowFunction!>! windowFunctions) -> void
+Substrait.Core.Extension.ExtensionDefinitions.Resolve(string! uri) -> System.Collections.Generic.IEnumerable<Substrait.Core.Extension.Functions.FunctionImpl!>!
+Substrait.Core.Extension.ExtensionDefinitions.ScalarFunctions.get -> System.Collections.Generic.IReadOnlyList<Substrait.Core.Extension.Functions.ScalarFunction!>!
+Substrait.Core.Extension.ExtensionDefinitions.ScalarFunctions.init -> void
+Substrait.Core.Extension.ExtensionDefinitions.Size() -> int
+Substrait.Core.Extension.ExtensionDefinitions.TypeVariations.get -> System.Collections.Generic.IReadOnlyList<Substrait.Core.Extension.Types.TypeVariation!>!
+Substrait.Core.Extension.ExtensionDefinitions.TypeVariations.init -> void
+Substrait.Core.Extension.ExtensionDefinitions.WindowFunctions.get -> System.Collections.Generic.IReadOnlyList<Substrait.Core.Extension.Functions.WindowFunction!>!
+Substrait.Core.Extension.ExtensionDefinitions.WindowFunctions.init -> void
+Substrait.Core.Extension.ExtensionsCollection
+Substrait.Core.Extension.ExtensionsCollection.AggregateFunctionImpls.get -> System.Collections.Generic.IReadOnlyList<Substrait.Core.Extension.Functions.AggregateFunctionImpl!>!
+Substrait.Core.Extension.ExtensionsCollection.Count.get -> int
+Substrait.Core.Extension.ExtensionsCollection.ExtensionsCollection() -> void
+Substrait.Core.Extension.ExtensionsCollection.ExtensionsCollection(System.Collections.Generic.IEnumerable<Substrait.Core.Extension.Types.TypeVariationImpl!>! typeVariationImpls, System.Collections.Generic.IEnumerable<Substrait.Core.Extension.Functions.ScalarFunctionImpl!>! scalarFunctionImpls, System.Collections.Generic.IEnumerable<Substrait.Core.Extension.Functions.AggregateFunctionImpl!>! aggregateFunctionImpls, System.Collections.Generic.IEnumerable<Substrait.Core.Extension.Functions.WindowFunctionImpl!>! windowFunctionImpls) -> void
+Substrait.Core.Extension.ExtensionsCollection.Merge(Substrait.Core.Extension.ExtensionsCollection! extensionCollection) -> Substrait.Core.Extension.ExtensionsCollection!
+Substrait.Core.Extension.ExtensionsCollection.ScalarFunctionImpls.get -> System.Collections.Generic.IReadOnlyList<Substrait.Core.Extension.Functions.ScalarFunctionImpl!>!
+Substrait.Core.Extension.ExtensionsCollection.TryGetAggregateFunction(Substrait.Core.Extension.Functions.FunctionImplAnchor! anchor, Substrait.Core.Extension.ExtensionsDictionary.StrictMode strictMode, out Substrait.Core.Extension.Functions.AggregateFunctionImpl? function) -> bool
+Substrait.Core.Extension.ExtensionsCollection.TryGetScalarFunction(Substrait.Core.Extension.Functions.FunctionImplAnchor! anchor, Substrait.Core.Extension.ExtensionsDictionary.StrictMode strictMode, out Substrait.Core.Extension.Functions.ScalarFunctionImpl? function) -> bool
+Substrait.Core.Extension.ExtensionsCollection.TryGetTypeVariation(Substrait.Core.Extension.Types.TypeVariationImplAnchor! anchor, Substrait.Core.Extension.ExtensionsDictionary.StrictMode strictMode, out Substrait.Core.Extension.Types.TypeVariationImpl? typeVariation) -> bool
+Substrait.Core.Extension.ExtensionsCollection.TryGetWindowFunction(Substrait.Core.Extension.Functions.FunctionImplAnchor! anchor, Substrait.Core.Extension.ExtensionsDictionary.StrictMode strictMode, out Substrait.Core.Extension.Functions.WindowFunctionImpl? function) -> bool
+Substrait.Core.Extension.ExtensionsCollection.TypeVariationImpls.get -> System.Collections.Generic.IReadOnlyList<Substrait.Core.Extension.Types.TypeVariationImpl!>!
+Substrait.Core.Extension.ExtensionsCollection.WindowFunctionImpls.get -> System.Collections.Generic.IReadOnlyList<Substrait.Core.Extension.Functions.WindowFunctionImpl!>!
+Substrait.Core.Extension.ExtensionsDictionary
+Substrait.Core.Extension.ExtensionsDictionary.Builder
+Substrait.Core.Extension.ExtensionsDictionary.Builder.Build() -> Substrait.Core.Extension.ExtensionsDictionary!
+Substrait.Core.Extension.ExtensionsDictionary.Builder.Builder() -> void
+Substrait.Core.Extension.ExtensionsDictionary.Builder.Builder(Substrait.Protobuf.ExtendedExpression! extendedExpression) -> void
+Substrait.Core.Extension.ExtensionsDictionary.Builder.Builder(Substrait.Protobuf.Plan! plan) -> void
+Substrait.Core.Extension.ExtensionsDictionary.GetFunctionAnchor(int reference) -> Substrait.Core.Extension.Functions.FunctionImplAnchor!
+Substrait.Core.Extension.ExtensionsDictionary.GetTypeVariationAnchor(int reference) -> Substrait.Core.Extension.Types.TypeVariationImplAnchor!
+Substrait.Core.Extension.ExtensionsDictionary.StrictMode
+Substrait.Core.Extension.ExtensionsDictionary.StrictMode.FUNCTION = 1 -> Substrait.Core.Extension.ExtensionsDictionary.StrictMode
+Substrait.Core.Extension.ExtensionsDictionary.StrictMode.OFF = 0 -> Substrait.Core.Extension.ExtensionsDictionary.StrictMode
+Substrait.Core.Extension.ExtensionsDictionary.StrictMode.STRICT = Substrait.Core.Extension.ExtensionsDictionary.StrictMode.FUNCTION | Substrait.Core.Extension.ExtensionsDictionary.StrictMode.TYPE | Substrait.Core.Extension.ExtensionsDictionary.StrictMode.TYPE_VARIATION -> Substrait.Core.Extension.ExtensionsDictionary.StrictMode
+Substrait.Core.Extension.ExtensionsDictionary.StrictMode.TYPE = 2 -> Substrait.Core.Extension.ExtensionsDictionary.StrictMode
+Substrait.Core.Extension.ExtensionsDictionary.StrictMode.TYPE_VARIATION = 4 -> Substrait.Core.Extension.ExtensionsDictionary.StrictMode
+Substrait.Core.Extension.ExtensionsDictionary.TryGetAggregateFunction(Substrait.Core.Extension.Functions.FunctionImplAnchor! anchor, Substrait.Core.Extension.ExtensionsCollection! extensions, Substrait.Core.Extension.ExtensionsDictionary.StrictMode strictMode, out Substrait.Core.Extension.Functions.AggregateFunctionImpl? function) -> bool
+Substrait.Core.Extension.ExtensionsDictionary.TryGetScalarFunction(Substrait.Core.Extension.Functions.FunctionImplAnchor! anchor, Substrait.Core.Extension.ExtensionsCollection! extensions, Substrait.Core.Extension.ExtensionsDictionary.StrictMode strictMode, out Substrait.Core.Extension.Functions.ScalarFunctionImpl? function) -> bool
+Substrait.Core.Extension.ExtensionsDictionary.TryGetTypeVariation(Substrait.Core.Extension.Types.TypeVariationImplAnchor! anchor, Substrait.Core.Extension.ExtensionsCollection! extensions, Substrait.Core.Extension.ExtensionsDictionary.StrictMode strictMode, out Substrait.Core.Extension.Types.TypeVariationImpl? typeVariation) -> bool
+Substrait.Core.Extension.ExtensionsDictionary.TryGetTypeVariationAnchor(int reference, out Substrait.Core.Extension.Types.TypeVariationImplAnchor? anchor) -> bool
+Substrait.Core.Extension.ExtensionsDictionary.TryGetWindowFunction(Substrait.Core.Extension.Functions.FunctionImplAnchor! anchor, Substrait.Core.Extension.ExtensionsCollection! extensions, Substrait.Core.Extension.ExtensionsDictionary.StrictMode strictMode, out Substrait.Core.Extension.Functions.WindowFunctionImpl? function) -> bool
 Substrait.Core.Extension.Functions.AggregateFunction
 Substrait.Core.Extension.Functions.AggregateFunction.AggregateFunction() -> void
 Substrait.Core.Extension.Functions.AggregateFunction.AggregateFunction(string! name, string! description, System.Collections.Generic.IEnumerable<Substrait.Core.Extension.Functions.AggregateFunctionImpl!>! impls) -> void
@@ -1232,6 +1283,11 @@ Substrait.Core.Relation.VirtualTableRead.VirtualTableRead(Substrait.Core.Type.Na
 Substrait.Core.Relation.VirtualTableRead.VirtualTableRead(Substrait.Core.Type.NamedStruct! initialSchema, System.Collections.Generic.IEnumerable<Substrait.Core.Expression.Expression.Struct!>! rows, Substrait.Core.Expression.IExpression? filter, Substrait.Core.Relation.Remap? transmute) -> void
 Substrait.Core.Relation.ZeroInput
 Substrait.Core.Relation.ZeroInput.ZeroInput() -> void
+Substrait.Core.Type.Converters.EnumExtensions
+Substrait.Core.Type.Converters.ProtoToTypeConverter
+Substrait.Core.Type.Converters.ProtoToTypeConverter.From(Substrait.Protobuf.Type! protoType) -> Substrait.Core.Type.IType!
+Substrait.Core.Type.Converters.ProtoToTypeConverter.ProtoToTypeConverter() -> void
+Substrait.Core.Type.Converters.ProtoToTypeConverter.ProtoToTypeConverter(Substrait.Core.Extension.ExtensionsDictionary! lookup, Substrait.Core.Extension.ExtensionsCollection! extensions, Substrait.Core.Extension.ExtensionsDictionary.StrictMode strictMode = Substrait.Core.Extension.ExtensionsDictionary.StrictMode.STRICT) -> void
 Substrait.Core.Type.DefaultTypeVisitor<TContext, TOutput>
 Substrait.Core.Type.DefaultTypeVisitor<TContext, TOutput>.DefaultTypeVisitor() -> void
 Substrait.Core.Type.IType
@@ -1363,6 +1419,20 @@ Substrait.Core.Type.TypeTopDownDispatcher<TContext, TOutput>.TypeTopDownDispatch
 Substrait.Core.Type.TypeVisitor<TContext, TOutput>
 Substrait.Core.Type.TypeVisitor<TContext, TOutput>.TypeVisitor() -> void
 Substrait.Tools.EnumUtils
+Substrait.Tools.ExtensionUtils
+Substrait.Tools.ExtensionUtils.EmbeddedResourceResolver
+Substrait.Tools.ExtensionUtils.EmbeddedResourceResolver.EmbeddedResourceResolver(System.Reflection.Assembly! assembly) -> void
+Substrait.Tools.ExtensionUtils.EmbeddedResourceResolver.Resolve(string! path) -> System.IO.Stream!
+Substrait.Tools.ExtensionUtils.ExtensionFile
+Substrait.Tools.ExtensionUtils.ExtensionFile.ExtensionFile() -> void
+Substrait.Tools.ExtensionUtils.ExtensionFile.ExtensionFile(string! namespaceStr, string! path) -> void
+Substrait.Tools.ExtensionUtils.ExtensionFile.Namespace.get -> string!
+Substrait.Tools.ExtensionUtils.ExtensionFile.Path.get -> string!
+Substrait.Tools.ExtensionUtils.FileSystemResolver
+Substrait.Tools.ExtensionUtils.FileSystemResolver.FileSystemResolver() -> void
+Substrait.Tools.ExtensionUtils.FileSystemResolver.Resolve(string! path) -> System.IO.Stream!
+Substrait.Tools.ExtensionUtils.IExtensionFileResolver
+Substrait.Tools.ExtensionUtils.IExtensionFileResolver.Resolve(string! path) -> System.IO.Stream!
 Substrait.Tools.ObjectUtils
 Substrait.Tools.ObjectUtils.FirstValueComparer<TKey, TValue>
 Substrait.Tools.ObjectUtils.FirstValueComparer<TKey, TValue>.Equals((TKey, TValue) x, (TKey, TValue) y) -> bool
@@ -1428,6 +1498,119 @@ virtual Substrait.Core.Relation.RelBottomUpDispatcher<TContext, TOutput>.ShouldB
 virtual Substrait.Core.Relation.RelTopDownDispatcher<TContext, TOutput>.ShouldBailOut(TOutput result, TContext context) -> bool
 virtual Substrait.Core.Type.ParameterizedType.InputNodes.get -> System.Collections.Generic.IEnumerable<Substrait.Core.Type.IType!>!
 virtual Substrait.Core.Type.ParameterizedType.IsWildcard.get -> bool
+static Substrait.Tools.FileUtils.FetchPlan(string! filePath, Substrait.Tools.FileUtils.FileType fileType) -> Substrait.Protobuf.Plan!
+static Substrait.Tools.FileUtils.WritePlan(Substrait.Protobuf.Plan! plan, string! filePath, Substrait.Tools.FileUtils.FileType fileType) -> void
+static Substrait.Tools.ProtoUtils.AllocateAndAddRange<T>(this Google.Protobuf.Collections.RepeatedField<T>! fields, int count, System.Collections.Generic.IEnumerable<T>! values) -> void
+Substrait.Core.Extension.ExtensionsCollector
+Substrait.Core.Extension.ExtensionsCollector.Builder
+Substrait.Core.Extension.ExtensionsCollector.Builder.Build() -> Substrait.Core.Extension.ExtensionsCollector!
+Substrait.Core.Extension.ExtensionsCollector.Builder.Builder() -> void
+Substrait.Core.Extension.ExtensionsCollector.Builder.Collect(Substrait.Core.Extension.ExtensionsCollector.ExtensionType type, string! uri, string! name) -> int
+Substrait.Core.Extension.ExtensionsCollector.Extensions.get -> System.Collections.Generic.IReadOnlyList<(Substrait.Core.Extension.ExtensionsCollector.ExtensionType Type, string! Name, int ExtensionUriReference)>!
+Substrait.Core.Extension.ExtensionsCollector.Extensions.init -> void
+Substrait.Core.Extension.ExtensionsCollector.ExtensionType
+Substrait.Core.Extension.ExtensionsCollector.ExtensionType.Function = 2 -> Substrait.Core.Extension.ExtensionsCollector.ExtensionType
+Substrait.Core.Extension.ExtensionsCollector.ExtensionType.Type = 0 -> Substrait.Core.Extension.ExtensionsCollector.ExtensionType
+Substrait.Core.Extension.ExtensionsCollector.ExtensionType.TypeVariation = 1 -> Substrait.Core.Extension.ExtensionsCollector.ExtensionType
+Substrait.Core.Extension.ExtensionsCollector.ExtensionUris.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Substrait.Core.Extension.ExtensionsCollector.ExtensionUris.init -> void
+Substrait.Tools.FileUtils
+Substrait.Tools.FileUtils.FileType
+Substrait.Tools.FileUtils.FileType.Json = 1 -> Substrait.Tools.FileUtils.FileType
+Substrait.Tools.FileUtils.FileType.Protobuf = 0 -> Substrait.Tools.FileUtils.FileType
+Substrait.Tools.ProtoUtils
+Substrait.Tools.UniqueList<T>
+Substrait.Tools.UniqueList<T>.Add(T item) -> void
+Substrait.Tools.UniqueList<T>.AddRange(System.Collections.Generic.IEnumerable<T>! items) -> void
+Substrait.Tools.UniqueList<T>.Clear() -> void
+Substrait.Tools.UniqueList<T>.Contains(T item) -> bool
+Substrait.Tools.UniqueList<T>.CopyTo(T[]! array, int arrayIndex) -> void
+Substrait.Tools.UniqueList<T>.Count.get -> int
+Substrait.Tools.UniqueList<T>.GetEnumerator() -> System.Collections.Generic.IEnumerator<T>!
+Substrait.Tools.UniqueList<T>.IndexOf(T item) -> int
+Substrait.Tools.UniqueList<T>.Insert(int index, T item) -> void
+Substrait.Tools.UniqueList<T>.IsReadOnly.get -> bool
+Substrait.Tools.UniqueList<T>.Remove(T item) -> bool
+Substrait.Tools.UniqueList<T>.RemoveAt(int index) -> void
+Substrait.Tools.UniqueList<T>.this[int index].get -> T
+Substrait.Tools.UniqueList<T>.TryAdd(T item) -> bool
+Substrait.Tools.UniqueList<T>.TryAddAndIndexOf(T item) -> int
+Substrait.Tools.UniqueList<T>.TryAddRange(System.Collections.Generic.IEnumerable<T>! items) -> int
+Substrait.Tools.UniqueList<T>.UniqueList() -> void
+Substrait.Tools.UniqueList<T>.UniqueList(System.Collections.Generic.IEqualityComparer<T>! comparer) -> void
+static Substrait.Core.Expression.Converters.EnumExtensions.FromProto(this Substrait.Protobuf.AggregateFunction.Types.AggregationInvocation proto) -> Substrait.Core.Expression.AggregateFunctionInvocation.AggregationInvocation
+static Substrait.Core.Expression.Converters.EnumExtensions.FromProto(this Substrait.Protobuf.AggregationPhase proto) -> Substrait.Core.Expression.AggregateFunctionInvocation.AggregationPhase
+static Substrait.Core.Expression.Converters.EnumExtensions.FromProto(this Substrait.Protobuf.Expression.Types.Cast.Types.FailureBehavior proto) -> Substrait.Core.Expression.Expression.Cast.FailureBehavior
+static Substrait.Core.Expression.Converters.EnumExtensions.FromProto(this Substrait.Protobuf.Expression.Types.Subquery.Types.SetComparison.Types.ComparisonOp proto) -> Substrait.Core.Expression.Expression.SetComparisonSubquery.ComparisonOp
+static Substrait.Core.Expression.Converters.EnumExtensions.FromProto(this Substrait.Protobuf.Expression.Types.Subquery.Types.SetComparison.Types.ReductionOp proto) -> Substrait.Core.Expression.Expression.SetComparisonSubquery.ReductionOp
+static Substrait.Core.Expression.Converters.EnumExtensions.FromProto(this Substrait.Protobuf.Expression.Types.Subquery.Types.SetPredicate.Types.PredicateOp proto) -> Substrait.Core.Expression.Expression.SetPredicateSubquery.PredicateOp
+static Substrait.Core.Expression.Converters.EnumExtensions.FromProto(this Substrait.Protobuf.SortField.Types.SortDirection proto) -> Substrait.Core.Expression.SortField.SortDirection
+static Substrait.Core.Expression.Converters.EnumExtensions.ToProto(this Substrait.Core.Expression.AggregateFunctionInvocation.AggregationInvocation op) -> Substrait.Protobuf.AggregateFunction.Types.AggregationInvocation
+static Substrait.Core.Expression.Converters.EnumExtensions.ToProto(this Substrait.Core.Expression.AggregateFunctionInvocation.AggregationPhase op) -> Substrait.Protobuf.AggregationPhase
+static Substrait.Core.Expression.Converters.EnumExtensions.ToProto(this Substrait.Core.Expression.Expression.Cast.FailureBehavior op) -> Substrait.Protobuf.Expression.Types.Cast.Types.FailureBehavior
+static Substrait.Core.Expression.Converters.EnumExtensions.ToProto(this Substrait.Core.Expression.Expression.SetComparisonSubquery.ComparisonOp op) -> Substrait.Protobuf.Expression.Types.Subquery.Types.SetComparison.Types.ComparisonOp
+static Substrait.Core.Expression.Converters.EnumExtensions.ToProto(this Substrait.Core.Expression.Expression.SetComparisonSubquery.ReductionOp op) -> Substrait.Protobuf.Expression.Types.Subquery.Types.SetComparison.Types.ReductionOp
+static Substrait.Core.Expression.Converters.EnumExtensions.ToProto(this Substrait.Core.Expression.Expression.SetPredicateSubquery.PredicateOp op) -> Substrait.Protobuf.Expression.Types.Subquery.Types.SetPredicate.Types.PredicateOp
+static Substrait.Core.Expression.Converters.EnumExtensions.ToProto(this Substrait.Core.Expression.SortField.SortDirection op) -> Substrait.Protobuf.SortField.Types.SortDirection
+static Substrait.Core.Relation.Converters.EnumExtensions.FromProto(this Substrait.Protobuf.ComparisonJoinKey.Types.SimpleComparisonType proto) -> Substrait.Core.Relation.PhysicalJoin.ComparisonJoinKey.SimpleComparisonType
+static Substrait.Core.Relation.Converters.EnumExtensions.FromProto(this Substrait.Protobuf.HashJoinRel.Types.JoinType proto) -> Substrait.Core.Relation.AbstractJoin.JoinType
+static Substrait.Core.Relation.Converters.EnumExtensions.FromProto(this Substrait.Protobuf.JoinRel.Types.JoinType proto) -> Substrait.Core.Relation.AbstractJoin.JoinType
+static Substrait.Core.Relation.Converters.EnumExtensions.FromProto(this Substrait.Protobuf.SetRel.Types.SetOp proto) -> Substrait.Core.Relation.Set.SetOp
+static Substrait.Core.Relation.Converters.EnumExtensions.ToHashJoinProto(this Substrait.Core.Relation.AbstractJoin.JoinType joinType) -> Substrait.Protobuf.HashJoinRel.Types.JoinType
+static Substrait.Core.Relation.Converters.EnumExtensions.ToProto(this Substrait.Core.Relation.AbstractJoin.JoinType op) -> Substrait.Protobuf.JoinRel.Types.JoinType
+static Substrait.Core.Relation.Converters.EnumExtensions.ToProto(this Substrait.Core.Relation.PhysicalJoin.ComparisonJoinKey.SimpleComparisonType type) -> Substrait.Protobuf.ComparisonJoinKey.Types.SimpleComparisonType
+static Substrait.Core.Relation.Converters.EnumExtensions.ToProto(this Substrait.Core.Relation.Set.SetOp op) -> Substrait.Protobuf.SetRel.Types.SetOp
+Substrait.Core.Expression.Converters.EnumExtensions
+Substrait.Core.Relation.Converters.EnumExtensions
+Substrait.Core.Expression.Converters.ProtoToExpressionConverter
+Substrait.Core.Expression.Converters.ProtoToExpressionConverter.CreateLiteral(Substrait.Protobuf.Expression.Types.Literal! protoLiteral) -> Substrait.Core.Expression.Literal!
+Substrait.Core.Expression.Converters.ProtoToExpressionConverter.CreateReference(Substrait.Protobuf.Expression.Types.FieldReference! fieldReference, Substrait.Core.Type.ParameterizedType.Struct! inputSchema, System.Collections.Generic.IReadOnlyList<Substrait.Core.Type.ParameterizedType.Struct!>! enclosingSchemas) -> Substrait.Core.Expression.FieldReference!
+Substrait.Core.Expression.Converters.ProtoToExpressionConverter.From(Substrait.Protobuf.Expression! protoExpression, Substrait.Core.Type.ParameterizedType.Struct! inputSchema, System.Collections.Generic.IReadOnlyList<Substrait.Core.Type.ParameterizedType.Struct!>! enclosingSchemas) -> Substrait.Core.Expression.IExpression!
+Substrait.Core.Expression.Converters.ProtoToExpressionConverter.From(Substrait.Protobuf.Expression! protoExpression) -> Substrait.Core.Expression.IExpression!
+Substrait.Core.Expression.Converters.ProtoToExpressionConverter.ProtoToExpressionConverter(Substrait.Core.Extension.ExtensionsDictionary! lookup, Substrait.Core.Extension.ExtensionsCollection! extensions, Substrait.Core.Type.Converters.ProtoToTypeConverter! protoTypeConverter, Substrait.Core.Extension.ExtensionsDictionary.StrictMode strictMode = Substrait.Core.Extension.ExtensionsDictionary.StrictMode.STRICT) -> void
+Substrait.Core.Expression.Converters.ProtoToFunctionArgConverter
+Substrait.Core.Expression.Converters.ProtoToFunctionArgConverter.From(Substrait.Protobuf.FunctionArgument! functionArgument, Substrait.Core.Type.ParameterizedType.Struct! inputSchema, System.Collections.Generic.IReadOnlyList<Substrait.Core.Type.ParameterizedType.Struct!>! enclosingSchemas) -> Substrait.Core.Expression.IFunctionArg!
+Substrait.Core.Expression.Converters.ProtoToFunctionArgConverter.ProtoToFunctionArgConverter(Substrait.Core.Expression.Converters.ProtoToExpressionConverter! expressionConverter, Substrait.Core.Type.Converters.ProtoToTypeConverter! typeConverter) -> void
+Substrait.Core.Expression.Converters.ProtoToExpressionConverter.ProtoToExpressionConverter(Substrait.Core.Extension.ExtensionsDictionary! lookup, Substrait.Core.Extension.ExtensionsCollection! extensions, Substrait.Core.Type.Converters.ProtoToTypeConverter! protoTypeConverter, Substrait.Core.Relation.Converters.ProtoToRelConverter? protoRelConverter, Substrait.Core.Extension.ExtensionsDictionary.StrictMode strictMode = Substrait.Core.Extension.ExtensionsDictionary.StrictMode.STRICT) -> void
+Substrait.Core.Relation.Converters.ProtoToRelConverter
+Substrait.Core.Relation.Converters.ProtoToRelConverter.ProtoToRelConverter(Substrait.Core.Extension.ExtensionsDictionary! lookup, Substrait.Core.Extension.ExtensionsCollection! extensions, Substrait.Core.Extension.ExtensionsDictionary.StrictMode strictMode = Substrait.Core.Extension.ExtensionsDictionary.StrictMode.STRICT) -> void
+Substrait.Core.Relation.Converters.ProtoToRelConverter.ProtoToRelConverter(Substrait.Core.Extension.ExtensionsDictionary! lookup, Substrait.Core.Extension.ExtensionsDictionary.StrictMode strictMode = Substrait.Core.Extension.ExtensionsDictionary.StrictMode.STRICT) -> void
+Substrait.Core.Relation.Converters.ProtoToRelConverter.ToRel(Substrait.Protobuf.Rel! protoRel, System.Collections.Generic.IReadOnlyList<Substrait.Core.Type.ParameterizedType.Struct!>! enclosingSchemas) -> Substrait.Core.Relation.IRel!
+Substrait.Core.Relation.Converters.ProtoToRelConverter.ToRel(Substrait.Protobuf.Rel! protoRel) -> Substrait.Core.Relation.IRel!
+Substrait.Core.Plan.Converters.ProtoToPlanConverter
+Substrait.Core.Plan.Converters.ProtoToPlanConverter.From(Substrait.Protobuf.Plan! plan, Substrait.Core.Extension.ExtensionsDictionary.StrictMode strictMode = Substrait.Core.Extension.ExtensionsDictionary.StrictMode.STRICT) -> Substrait.Core.Plan.IPlan!
+Substrait.Core.Plan.Converters.ProtoToPlanConverter.GetProtoRelConverter(Substrait.Core.Extension.ExtensionsDictionary! lookup, Substrait.Core.Extension.ExtensionsDictionary.StrictMode strictMode) -> Substrait.Core.Relation.Converters.ProtoToRelConverter!
+Substrait.Core.Plan.Converters.ProtoToPlanConverter.ProtoToPlanConverter() -> void
+Substrait.Core.Plan.Converters.ProtoToPlanConverter.ProtoToPlanConverter(Substrait.Core.Extension.ExtensionsCollection! extensions) -> void
+Substrait.Core.Plan.Converters.PlanToProtoConverter
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext.AddExtension(Substrait.Core.Extension.ExtensionsCollector.ExtensionType type, string! uri, string! name) -> int
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext.AddOutput(Substrait.Core.Expression.IExpression! node, Substrait.Protobuf.Expression! output) -> void
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext.AddOutput(Substrait.Core.Relation.IRel! node, Substrait.Protobuf.Rel! output) -> void
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext.AddOutput(Substrait.Core.Type.IType! node, Substrait.Protobuf.Type! output) -> void
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext.ConverterContext() -> void
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext.ExtensionsCollector.get -> Substrait.Core.Extension.ExtensionsCollector!
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext.GetOutput(Substrait.Core.Expression.IExpression! node) -> Substrait.Protobuf.Expression!
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext.GetOutput(Substrait.Core.Relation.IRel! node) -> Substrait.Protobuf.Rel!
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext.GetOutput(Substrait.Core.Type.IType! node) -> Substrait.Protobuf.Type!
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext.RemoveOutput(Substrait.Core.Expression.IExpression! node) -> void
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext.RemoveOutput(Substrait.Core.Relation.IRel! node) -> void
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext.RemoveOutput(Substrait.Core.Type.IType! node) -> void
+Substrait.Core.Plan.Converters.PlanToProtoConverter.From(Substrait.Core.Plan.IPlan! plan) -> Substrait.Protobuf.Plan!
+Substrait.Core.Plan.Converters.PlanToProtoConverter.PlanToProtoConverter() -> void
+Substrait.Core.Type.Converters.TypeToProtoConverter
+Substrait.Core.Type.Converters.TypeToProtoConverter.From(Substrait.Core.Type.IType! type, Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext! context) -> Substrait.Protobuf.Type!
+Substrait.Core.Type.Converters.TypeToProtoConverter.From(Substrait.Core.Type.IType! type) -> Substrait.Protobuf.Type!
+Substrait.Core.Type.Converters.TypeToProtoConverter.TypeToProtoConverter() -> void
+Substrait.Core.Expression.Converters.ExpressionToProtoConverter
+Substrait.Core.Expression.Converters.ExpressionToProtoConverter.ExpressionToProtoConverter(Substrait.Core.Type.Converters.TypeToProtoConverter! typeConverter) -> void
+Substrait.Core.Expression.Converters.ExpressionToProtoConverter.ExpressionToProtoConverter(Substrait.Core.Type.Converters.TypeToProtoConverter! typeConverter, Substrait.Core.Relation.Converters.RelToProtoConverter? relationConverter) -> void
+Substrait.Core.Expression.Converters.ExpressionToProtoConverter.From(Substrait.Core.Expression.IExpression! expression, Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext! context) -> Substrait.Protobuf.Expression!
+Substrait.Core.Expression.Converters.ExpressionToProtoConverter.From(Substrait.Core.Expression.IExpression! expression) -> Substrait.Protobuf.Expression!
+Substrait.Core.Relation.Converters.RelToProtoConverter
+Substrait.Core.Relation.Converters.RelToProtoConverter.From(Substrait.Core.Relation.IRel! relation, Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext! context) -> Substrait.Protobuf.Rel!
+Substrait.Core.Relation.Converters.RelToProtoConverter.From(Substrait.Core.Relation.IRel! relation) -> Substrait.Protobuf.Rel!
+Substrait.Core.Relation.Converters.RelToProtoConverter.RelToProtoConverter() -> void
 virtual Substrait.Core.Type.PrimitiveType.TypeName.get -> string!
 virtual Substrait.Core.Type.TypeBottomUpDispatcher<TContext, TOutput>.ShouldBailOut(TOutput result, TContext context) -> bool
 virtual Substrait.Core.Type.TypeTopDownDispatcher<TContext, TOutput>.ShouldBailOut(TOutput result, TContext context) -> bool
