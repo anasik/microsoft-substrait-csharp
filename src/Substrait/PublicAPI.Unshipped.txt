@@ -1582,6 +1582,25 @@ Substrait.Core.Plan.Converters.ProtoToPlanConverter.From(Substrait.Protobuf.Plan
 Substrait.Core.Plan.Converters.ProtoToPlanConverter.GetProtoRelConverter(Substrait.Core.Extension.ExtensionsDictionary! lookup, Substrait.Core.Extension.ExtensionsDictionary.StrictMode strictMode) -> Substrait.Core.Relation.Converters.ProtoToRelConverter!
 Substrait.Core.Plan.Converters.ProtoToPlanConverter.ProtoToPlanConverter() -> void
 Substrait.Core.Plan.Converters.ProtoToPlanConverter.ProtoToPlanConverter(Substrait.Core.Extension.ExtensionsCollection! extensions) -> void
+Substrait.Core.Plan.Converters.PlanToProtoConverter
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext.AddExtension(Substrait.Core.Extension.ExtensionsCollector.ExtensionType type, string! uri, string! name) -> int
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext.AddOutput(Substrait.Core.Expression.IExpression! node, Substrait.Protobuf.Expression! output) -> void
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext.AddOutput(Substrait.Core.Relation.IRel! node, Substrait.Protobuf.Rel! output) -> void
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext.AddOutput(Substrait.Core.Type.IType! node, Substrait.Protobuf.Type! output) -> void
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext.ConverterContext() -> void
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext.ExtensionsCollector.get -> Substrait.Core.Extension.ExtensionsCollector!
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext.GetOutput(Substrait.Core.Expression.IExpression! node) -> Substrait.Protobuf.Expression!
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext.GetOutput(Substrait.Core.Relation.IRel! node) -> Substrait.Protobuf.Rel!
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext.GetOutput(Substrait.Core.Type.IType! node) -> Substrait.Protobuf.Type!
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext.RemoveOutput(Substrait.Core.Expression.IExpression! node) -> void
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext.RemoveOutput(Substrait.Core.Relation.IRel! node) -> void
+Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext.RemoveOutput(Substrait.Core.Type.IType! node) -> void
+Substrait.Core.Plan.Converters.PlanToProtoConverter.PlanToProtoConverter() -> void
+Substrait.Core.Type.Converters.TypeToProtoConverter
+Substrait.Core.Type.Converters.TypeToProtoConverter.From(Substrait.Core.Type.IType! type, Substrait.Core.Plan.Converters.PlanToProtoConverter.ConverterContext! context) -> Substrait.Protobuf.Type!
+Substrait.Core.Type.Converters.TypeToProtoConverter.From(Substrait.Core.Type.IType! type) -> Substrait.Protobuf.Type!
+Substrait.Core.Type.Converters.TypeToProtoConverter.TypeToProtoConverter() -> void
 virtual Substrait.Core.Type.PrimitiveType.TypeName.get -> string!
 virtual Substrait.Core.Type.TypeBottomUpDispatcher<TContext, TOutput>.ShouldBailOut(TOutput result, TContext context) -> bool
 virtual Substrait.Core.Type.TypeTopDownDispatcher<TContext, TOutput>.ShouldBailOut(TOutput result, TContext context) -> bool

@@ -1,5 +1,8 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Substrait.Core.Extension;
+using Substrait.Core.Extension.Functions;
+using Substrait.Core.Extension.Types;
+using Substrait.Core.Plan.Converters;
 using Substrait.Core.Type;
 using Substrait.Core.Type.Converters;
 using ProtoType = Substrait.Protobuf.Type;
@@ -138,5 +141,38 @@ public sealed class ProtoToTypeConverterTests
             ExtensionsDictionary.StrictMode.OFF);
 
         Assert.AreEqual(TypeFactory.REQUIRED.I64, converter.From(type));
+    }
+
+    [TestMethod]
+    public void ConvertsNestedInternalStructToProto()
+    {
+        IType type = TypeFactory.NULLABLE.Struct(
+        [
+            TypeFactory.REQUIRED.I32,
+            TypeFactory.REQUIRED.Struct([TypeFactory.NULLABLE.String_(null), TypeFactory.REQUIRED.Decimal(12, 3)]),
+        ]);
+
+        ProtoType result = new TypeToProtoConverter().From(type);
+
+        Assert.AreEqual(ProtoType.Types.Nullability.Nullable, result.Struct.Nullability);
+        Assert.IsNotNull(result.Struct.Types_[0].I32);
+        Assert.AreEqual(2, result.Struct.Types_[1].Struct.Types_.Count);
+        Assert.IsNotNull(result.Struct.Types_[1].Struct.Types_[0].String);
+        Assert.AreEqual(12, result.Struct.Types_[1].Struct.Types_[1].Decimal.Precision);
+    }
+
+    [TestMethod]
+    public void CollectsTypeVariationWithReservedZeroAnchor()
+    {
+        var variation = new TypeVariationImpl("/types.yaml", "i64", "custom", string.Empty, FunctionBehavior.INHERITS);
+        IType type = TypeFactory.REQUIRED.I64_(variation);
+        var context = new PlanToProtoConverter.ConverterContext();
+
+        ProtoType result = new TypeToProtoConverter().From(type, context);
+
+        Assert.AreEqual(1U, result.I64.TypeVariationReference);
+        Assert.AreEqual(1, context.ExtensionsCollector.ExtensionUris.Count);
+        Assert.AreEqual("/types.yaml", context.ExtensionsCollector.ExtensionUris[0]);
+        Assert.AreEqual(ExtensionsCollector.ExtensionType.TypeVariation, context.ExtensionsCollector.Extensions[0].Type);
     }
 }
