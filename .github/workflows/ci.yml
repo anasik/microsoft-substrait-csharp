@@ -37,7 +37,10 @@ jobs:
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
 
       - name: Restore
         run: dotnet restore Substrait.sln
@@ -83,11 +86,23 @@ jobs:
           -o artifacts/sbom-validation.json
           -mi SPDX:2.2
 
-      - name: Restore package smoke test
-        run: dotnet restore tests/PackageSmokeTest/PackageSmokeTest.csproj -p:SmokeTestPackageVersion=${{ env.PREVIEW_PACKAGE_VERSION }} --configfile tests/PackageSmokeTest/NuGet.Config --no-cache
+      - name: Restore .NET 10 package smoke test
+        run: dotnet restore tests/PackageSmokeTest/PackageSmokeTest.csproj -p:SmokeTestPackageVersion=${{ env.PREVIEW_PACKAGE_VERSION }} -p:SmokeTestTargetFramework=net10.0 --configfile tests/PackageSmokeTest/NuGet.Config --no-cache
 
-      - name: Run package smoke test
-        run: dotnet run --project tests/PackageSmokeTest/PackageSmokeTest.csproj --configuration Release --no-restore -p:SmokeTestPackageVersion=${{ env.PREVIEW_PACKAGE_VERSION }}
+      - name: Run .NET 10 package smoke test
+        run: dotnet run --project tests/PackageSmokeTest/PackageSmokeTest.csproj --configuration Release --no-restore -p:SmokeTestPackageVersion=${{ env.PREVIEW_PACKAGE_VERSION }} -p:SmokeTestTargetFramework=net10.0
+
+      - name: Restore .NET 9 package smoke test
+        run: dotnet restore tests/PackageSmokeTest/PackageSmokeTest.csproj -p:SmokeTestPackageVersion=${{ env.PREVIEW_PACKAGE_VERSION }} -p:SmokeTestTargetFramework=net9.0 --configfile tests/PackageSmokeTest/NuGet.Config --no-cache
+
+      - name: Run .NET 9 package smoke test
+        run: dotnet run --project tests/PackageSmokeTest/PackageSmokeTest.csproj --configuration Release --no-restore -p:SmokeTestPackageVersion=${{ env.PREVIEW_PACKAGE_VERSION }} -p:SmokeTestTargetFramework=net9.0
+
+      - name: Restore .NET 8 package smoke test
+        run: dotnet restore tests/PackageSmokeTest/PackageSmokeTest.csproj -p:SmokeTestPackageVersion=${{ env.PREVIEW_PACKAGE_VERSION }} -p:SmokeTestTargetFramework=net8.0 --configfile tests/PackageSmokeTest/NuGet.Config --no-cache
+
+      - name: Run .NET 8 package smoke test
+        run: dotnet run --project tests/PackageSmokeTest/PackageSmokeTest.csproj --configuration Release --no-restore -p:SmokeTestPackageVersion=${{ env.PREVIEW_PACKAGE_VERSION }} -p:SmokeTestTargetFramework=net8.0
 
       - name: Restore .NET Framework package smoke test
         if: runner.os == 'Windows'
