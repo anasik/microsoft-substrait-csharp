@@ -69,11 +69,18 @@ function Read-Nuspec {
 }
 
 function Read-SourceLinkUrls {
-    param([string] $Path)
+    param(
+        [string] $Path,
+        [string] $TargetFramework
+    )
 
     $archive = [System.IO.Compression.ZipFile]::OpenRead((Resolve-Path $Path))
     try {
-        $pdbEntry = $archive.GetEntry('lib/net8.0/Microsoft.Substrait.pdb')
+        $pdbEntry = $archive.GetEntry("lib/$TargetFramework/Microsoft.Substrait.pdb")
+        if ($null -eq $pdbEntry) {
+            throw "Package '$Path' is missing the Source Link PDB for '$TargetFramework'."
+        }
+
         $pdbStream = [System.IO.MemoryStream]::new()
         $entryStream = $pdbEntry.Open()
         try {
@@ -113,6 +120,8 @@ function Read-SourceLinkUrls {
 
 Assert-ArchiveEntries $PackagePath @(
     'Microsoft.Substrait.nuspec',
+    'lib/net10.0/Microsoft.Substrait.dll',
+    'lib/net10.0/Microsoft.Substrait.xml',
     'lib/net8.0/Microsoft.Substrait.dll',
     'lib/net8.0/Microsoft.Substrait.xml',
     'lib/netstandard2.0/Microsoft.Substrait.dll',
@@ -121,6 +130,7 @@ Assert-ArchiveEntries $PackagePath @(
 )
 Assert-ArchiveEntries $SymbolsPackagePath @(
     'Microsoft.Substrait.nuspec',
+    'lib/net10.0/Microsoft.Substrait.pdb',
     'lib/net8.0/Microsoft.Substrait.pdb',
     'lib/netstandard2.0/Microsoft.Substrait.pdb'
 )
@@ -143,18 +153,25 @@ if ([string]::IsNullOrWhiteSpace($metadata.repository.commit)) {
     throw 'Package repository commit is missing.'
 }
 
-$sourceLinkUrls = @(Read-SourceLinkUrls $SymbolsPackagePath)
 $expectedRepositorySource = "https://raw.githubusercontent.com/microsoft/substrait-csharp/$($metadata.repository.commit)/*"
 $expectedSubstraitSource = 'https://raw.githubusercontent.com/substrait-io/substrait/d430e521f203aec6a4e06731d4bfd68cdf61f443/*'
-if ($sourceLinkUrls -notcontains $expectedRepositorySource) {
-    throw "Source Link mapping '$expectedRepositorySource' is missing."
-}
+foreach ($targetFramework in @('net10.0', 'net8.0', 'netstandard2.0')) {
+    $sourceLinkUrls = @(Read-SourceLinkUrls $SymbolsPackagePath $targetFramework)
+    if ($sourceLinkUrls -notcontains $expectedRepositorySource) {
+        throw "Source Link mapping '$expectedRepositorySource' is missing for '$targetFramework'."
+    }
 
-if ($sourceLinkUrls -notcontains $expectedSubstraitSource) {
-    throw "Source Link mapping '$expectedSubstraitSource' is missing."
+    if ($sourceLinkUrls -notcontains $expectedSubstraitSource) {
+        throw "Source Link mapping '$expectedSubstraitSource' is missing for '$targetFramework'."
+    }
 }
 
 $expectedDependencyGroups = [ordered]@{
+    'net10.0' = [ordered]@{
+        'Antlr4.Runtime.Standard' = '4.13.1'
+        'Google.Protobuf' = '3.26.1'
+        'YamlDotNet' = '15.1.2'
+    }
     'net8.0' = [ordered]@{
         'Antlr4.Runtime.Standard' = '4.13.1'
         'Google.Protobuf' = '3.26.1'
@@ -165,6 +182,7 @@ $expectedDependencyGroups = [ordered]@{
         'Google.Protobuf' = '3.26.1'
         'IndexRange' = '1.0.3'
         'Microsoft.Bcl.HashCode' = '6.0.0'
+        'System.Collections.Immutable' = '8.0.0'
         'System.Memory' = '4.5.5'
         'YamlDotNet' = '15.1.2'
     }

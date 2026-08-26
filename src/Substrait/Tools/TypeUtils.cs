@@ -111,7 +111,11 @@ public static class TypeUtils
     public sealed class ITypeEqualityComparer(ITypeComparison comparison) : EqualityComparer<IType>
     {
         private static readonly IReadOnlyDictionary<ITypeComparison, ITypeEqualityComparer> DEFAULTINSTANCES
+#if NET5_0_OR_GREATER
+            = Enum.GetValues<ITypeComparison>().Distinct().ToImmutableDictionary(k => k, k => new ITypeEqualityComparer(k));
+#else
             = Enum.GetValues(typeof(ITypeComparison)).Cast<ITypeComparison>().Distinct().ToImmutableDictionary(k => k, k => new ITypeEqualityComparer(k));
+#endif
 
         private readonly NodeEqualsDispatcher dispatcher = new(comparison);
 

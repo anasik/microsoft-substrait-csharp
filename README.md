@@ -22,7 +22,7 @@ Experimental C# bindings for [substrait](https://substrait.io).
 
 ## Development
 
-The repository requires a .NET 8 SDK. The checked-in `global.json` selects a
+The repository requires a .NET 10 SDK. The checked-in `global.json` selects a
 compatible installed SDK.
 
 Clone the repository with its pinned Substrait specification sources:
