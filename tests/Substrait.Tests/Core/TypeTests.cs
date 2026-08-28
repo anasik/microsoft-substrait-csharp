@@ -222,4 +222,55 @@ public class TypeTests
     {
         Assert.ThrowsException<NotImplementedException>(() => IType.NullableType.Unspecified.Inverse());
     }
+
+    /// <summary>
+    /// Tests that Decimal rejects out-of-range precision and scale.
+    /// </summary>
+    [TestMethod]
+    public void TestDecimalRejectsOutOfRangePrecisionAndScale()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => TypeFactory.REQUIRED.Decimal(0, 0));
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => TypeFactory.REQUIRED.Decimal(39, 0));
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => TypeFactory.REQUIRED.Decimal(5, -1));
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => TypeFactory.REQUIRED.Decimal(5, 6));
+
+        // Boundary values are accepted.
+        TypeFactory.REQUIRED.Decimal(1, 0);
+        TypeFactory.REQUIRED.Decimal(38, 38);
+    }
+
+    /// <summary>
+    /// Tests that FixedChar, VarChar, and FixedBinary reject a non-positive length.
+    /// </summary>
+    [TestMethod]
+    public void TestFixedLengthTypesRejectNonPositiveLength()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => TypeFactory.REQUIRED.FixedChar(0));
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => TypeFactory.REQUIRED.FixedChar(-1));
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => TypeFactory.REQUIRED.VarChar(0));
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => TypeFactory.REQUIRED.FixedBinary(0));
+
+        // A positive length is accepted.
+        TypeFactory.REQUIRED.FixedChar(1);
+        TypeFactory.REQUIRED.VarChar(1);
+        TypeFactory.REQUIRED.FixedBinary(1);
+    }
+
+    /// <summary>
+    /// Tests that PrecisionTimestamp and PrecisionTimestampTZ reject a precision outside 0-12.
+    /// </summary>
+    [TestMethod]
+    public void TestPrecisionTimestampRejectsOutOfRangePrecision()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => TypeFactory.REQUIRED.PrecisionTimestamp(-1));
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => TypeFactory.REQUIRED.PrecisionTimestamp(13));
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => TypeFactory.REQUIRED.PrecisionTimestampTZ(-1));
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => TypeFactory.REQUIRED.PrecisionTimestampTZ(13));
+
+        // Boundary values (seconds through picoseconds) are accepted.
+        TypeFactory.REQUIRED.PrecisionTimestamp(0);
+        TypeFactory.REQUIRED.PrecisionTimestamp(12);
+        TypeFactory.REQUIRED.PrecisionTimestampTZ(0);
+        TypeFactory.REQUIRED.PrecisionTimestampTZ(12);
+    }
 }
