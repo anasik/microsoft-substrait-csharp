@@ -63,6 +63,20 @@ public class TypeTests
     }
 
     /// <summary>
+    /// Tests that PrecisionTimestamp and PrecisionTimestampTZ, despite having an identical shape
+    /// (a single Precision field), are never equal to each other.
+    /// </summary>
+    [TestMethod]
+    public void TestPrecisionTimestampAndPrecisionTimestampTZAreNotEqual()
+    {
+        IType withoutTz = TypeFactory.REQUIRED.PrecisionTimestamp(6);
+        IType withTz = TypeFactory.REQUIRED.PrecisionTimestampTZ(6);
+
+        Assert.AreNotEqual(withoutTz, withTz);
+        Assert.AreNotEqual(withoutTz.GetHashCode(), withTz.GetHashCode());
+    }
+
+    /// <summary>
     /// Tests precision timestamp with timezone equals.
     /// </summary>
     [TestMethod]
