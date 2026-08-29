@@ -18,7 +18,7 @@ public abstract class ParameterizedType : IType
     /// <summary>
     /// The maximum sub-second precision (picoseconds) a temporal type may declare.
     /// </summary>
-    private const int MaxSubsecondPrecision = 12;
+    public const int MaxSubsecondPrecision = 12;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ParameterizedType"/> class.
@@ -452,7 +452,7 @@ public abstract class ParameterizedType : IType
         /// <summary>
         /// The maximum precision (total digits) a <see cref="Decimal"/> may declare.
         /// </summary>
-        private const int MaxPrecision = 38;
+        public const int MaxPrecision = 38;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Decimal"/> class.
