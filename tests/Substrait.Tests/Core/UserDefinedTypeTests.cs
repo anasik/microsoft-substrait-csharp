@@ -575,9 +575,9 @@ public sealed class UserDefinedTypeTests
         return new ExtensionsDictionary.Builder(plan).Build();
     }
 
-    private sealed class RecordingVisitor : DefaultTypeVisitor<List<IType>, VoidOutput>
+    private sealed class RecordingVisitor : TypeVisitor<List<IType>, VoidOutput>
     {
-        protected override VoidOutput DefaultVisit(IType type, List<IType> context)
+        public override VoidOutput Visit(IType type, List<IType> context)
         {
             context.Add(type);
             return VoidOutput.Instance;
@@ -591,9 +591,9 @@ public sealed class UserDefinedTypeTests
         public IType? Result { get; set; }
     }
 
-    private sealed class RewritingVisitor : DefaultTypeVisitor<RecordingContext, IType>
+    private sealed class RewritingVisitor : TypeVisitor<RecordingContext, IType>
     {
-        protected override IType DefaultVisit(IType type, RecordingContext context)
+        public override IType Visit(IType type, RecordingContext context)
         {
             context.Visited.Add(type);
             context.Result = type switch
